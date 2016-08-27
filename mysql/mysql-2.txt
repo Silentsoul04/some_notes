@@ -1,0 +1,647 @@
+关系型数据库
+	MySQL Oracle mariaDB SQLServer Access等
+非关系数据库
+	memcache redis mongodb 等
+
+版本说明与区别
+1. alpha版，一般只在开发的公司内部运行，不对外公开
+2. beta版， 完成功能的开发和所有测试工作完成之后的产品，不会存在较大的功能或性能BUG
+3. rc版，rc版属于生产环境发布前的一个小版本或称候选版，是根据bate版测试结果，收集到的bug进一步修复和完善后的产品
+4. ga版，ga版是产品正式发布的版本，也称生产版本的产品
+
+安装:
+	yum 安装
+	源码编译
+	二进制包
+	根据需求将源码定制成rpm包，搭建yum仓库
+
+编译安装mysql5.5:
+1.安装cmake:
+	cd ~/tools/
+	tar xf cmake-2.8.8.tar.gz
+	cd cmake-2.8.8
+	./configure
+	#CMake has bootstrapped.  Now run gmake.
+	gmake
+	gmake install
+	cd ../
+2.依赖包:
+	yum install ncurses-devel -y
+3.解压安装
+tar zxf mysql-5.5.32.tar.gz 
+cd mysql-5.5.32
+cmake . -DCMAKE_INSTALL_PREFIX=/application/mysql-5.5.32 \
+-DMYSQL_DATADIR=/application/mysql-5.5.32/data \
+-DMYSQL_UNIX_ADDR=/application/mysql-5.5.32/tmp/mysql.sock \
+-DDEFAULT_CHARSET=utf8 \
+-DDEFAULT_COLLATION=utf8_general_ci \
+-DEXTRA_CHARSETS=gbk,gb2312,utf8,ascii \
+-DENABLED_LOCAL_INFILE=ON \
+-DWITH_INNOBASE_STORAGE_ENGINE=1 \
+-DWITH_FEDERATED_STORAGE_ENGINE=1 \
+-DWITH_BLACKHOLE_STORAGE_ENGINE=1 \
+-DWITHOUT_EXAMPLE_STORAGE_ENGINE=1 \
+-DWITHOUT_PARTITION_STORAGE_ENGINE=1 \
+-DWITH_FAST_MUTEXES=1 \
+-DWITH_ZLIB=bundled \
+-DENABLED_LOCAL_INFILE=1 \
+-DWITH_READLINE=1 \
+-DWITH_EMBEDDED_SERVER=1 \
+-DWITH_DEBUG=0
+编译时可配置的选项很多，具体可参考结尾附录或官方文档：
+make
+make install
+
+4. 创建软链接
+ln -s /application/mysql-5.5.32/ /application/mysql
+
+5.配置文件my.cnf
+cp support-files/my-small.cnf /etc/my.cnf
+
+6.配置环境变量
+echo "export PATH=/application/mysql/bin:$PATH" >> /etc/profile
+tail -1 /etc/profile
+source /etc/profile
+
+7.权限分配
+chown -R mysql:mysql /application/mysql/data/
+
+8.初始化
+cd /application/mysql/scripts/
+./mysql_install_db --basedir=/application/mysql/ --datadir=/application/mysql/data/ --user==mysql
+cp support-files/mysql.server /etc/init.d/mysqld
+
+/etc/init.d/mysqld start
+
+9、设置及更改密码
+mysqladmin -uroot password "123456"
+
+mysql -uroot -p123456
+
+10、安全优化
+删除test库
+mysql> drop database test;
+删除无用用户(保留root localhost)
+mysql> select user,host from user;
+mysql> drop user '用户'@'主机';
+delete from mysql.user where user="xxxx" and host="xxx"
+
+11.开机启动
+chkconfig --add mysqld
+chkconfig mysqld on
+
+
+
+mysql多实例:
+1.什么是mysql多实例
+简单的说就是一台机器上开启多个不同的服务端口(如3306,3307)运行多个不同的mysql服务进程，这些服务进程会通过不同的socket监听不同的服务端口来提供各自的服务。这些mysql多实例共用一套mysql安装程序，使用不同(也可以相同)的my.cn配置文件，启动程序，数据文件。启动服务时，多实例mysql在逻辑上看是各自独立的，多个实例的自身是根据配置文件对应的设定值，来取得服务器硬件资源多少。
+
+多实例的作用与问题
+1、有效利用服务器资源
+2、节约服务器资源
+3、资源互相竞争问题
+当某个服务器实例并发很高或者有慢查询的时候，整个实例会消耗更多的内存、CPU、磁盘IO资源。导致服务器上的其他的实例提供服务的质量下降。
+
+应用场景:
+1、公司业务访问量过大，又舍不得花钱，又希望不同业务的数据库各自尽量独立的提供服务互不影响，而且需要主从同步等技术提供备份或读写分离服务时。
+2、并发访问
+不是特别大的业务
+3、门户网站应用MySQL多实例场景
+百度的搜索引擎就是多实例，一般是从库，48核内存96G，跑3-4个实例.
+
+多实例常见配置方案
+1、通过多个配置文件及多个启动程序
+2、通过单个配置文件
+
+安装:
+1.依赖
+yum install ncurses-devel libaio-devel -y
+2.安装mysql
+..... 相当于到上面安装的 make install
+3.创建多个实例的目录
+mkdir -p /data/3306 /data/3307
+4.修改配置文件
+/data/3306/my.cnf
+	[client]
+	port            = 3306
+	socket          = /data/3306/mysql.sock
+
+	[mysql]
+	no-auto-rehash
+
+	[mysqld]
+	user    = mysql
+	port    = 3306
+	socket  = /data/3306/mysql.sock
+	basedir = /application/mysql
+	datadir = /data/3306/data
+	open_files_limit    = 1024
+	back_log = 600
+	max_connections = 800
+	max_connect_errors = 3000
+	table_cache = 614
+	external-locking = FALSE
+	max_allowed_packet =8M
+	sort_buffer_size = 1M
+	join_buffer_size = 1M
+	thread_cache_size = 100
+	thread_concurrency = 2
+	query_cache_size = 2M
+	query_cache_limit = 1M
+	query_cache_min_res_unit = 2k
+	#default_table_type = InnoDB
+	thread_stack = 192K
+	#transaction_isolation = READ-COMMITTED
+	tmp_table_size = 2M
+	max_heap_table_size = 2M
+	long_query_time = 1
+	#log_long_format
+	#log-error = /data/3306/error.log
+	#log-slow-queries = /data/3306/slow.log
+	pid-file = /data/3306/mysql.pid
+	log-bin = /data/3306/mysql-bin
+	relay-log = /data/3306/relay-bin
+	relay-log-info-file = /data/3306/relay-log.info
+	binlog_cache_size = 1M
+	max_binlog_cache_size = 1M
+	max_binlog_size = 2M
+	expire_logs_days = 7
+	key_buffer_size = 16M
+	read_buffer_size = 1M
+	read_rnd_buffer_size = 1M
+	bulk_insert_buffer_size = 1M
+	#myisam_sort_buffer_size = 1M
+	#myisam_max_sort_file_size = 10G
+	#myisam_max_extra_sort_file_size = 10G
+	#myisam_repair_threads = 1
+	#myisam_recover
+
+	lower_case_table_names = 1
+	skip-name-resolve
+	slave-skip-errors = 1032,1062
+	replicate-ignore-db=mysql
+
+	server-id = 1
+
+	innodb_additional_mem_pool_size = 4M
+	innodb_buffer_pool_size = 32M
+	innodb_data_file_path = ibdata1:128M:autoextend
+	innodb_file_io_threads = 4
+	innodb_thread_concurrency = 8
+	innodb_flush_log_at_trx_commit = 2
+	innodb_log_buffer_size = 2M
+	innodb_log_file_size = 4M
+	innodb_log_files_in_group = 3
+	innodb_max_dirty_pages_pct = 90
+	innodb_lock_wait_timeout = 120
+	innodb_file_per_table = 0
+	[mysqldump]
+	quick
+	max_allowed_packet = 2M
+
+	[mysqld_safe]
+	log-error=/data/3306/mysql_hhf3306.err
+	pid-file=/data/3306/mysqld.pid
+
+
+/data/3307/my.cnf
+	[client]
+	port            = 3307
+	socket          = /data/3307/mysql.sock
+
+	[mysql]
+	no-auto-rehash
+
+	[mysqld]
+	user    = mysql
+	port    = 3307
+	socket  = /data/3307/mysql.sock
+	basedir = /application/mysql
+	datadir = /data/3307/data
+	open_files_limit    = 1024
+	back_log = 600
+	max_connections = 800
+	max_connect_errors = 3000
+	table_cache = 614
+	external-locking = FALSE
+	max_allowed_packet =8M
+	sort_buffer_size = 1M
+	join_buffer_size = 1M
+	thread_cache_size = 100
+	thread_concurrency = 2
+	query_cache_size = 2M
+	query_cache_limit = 1M
+	query_cache_min_res_unit = 2k
+	#default_table_type = InnoDB
+	thread_stack = 192K
+	#transaction_isolation = READ-COMMITTED
+	tmp_table_size = 2M
+	max_heap_table_size = 2M
+	#long_query_time = 1
+	#log_long_format
+	#log-error = /data/3307/error.log
+	#log-slow-queries = /data/3307/slow.log
+	pid-file = /data/3307/mysql.pid
+	#log-bin = /data/3307/mysql-bin
+	relay-log = /data/3307/relay-bin
+	relay-log-info-file = /data/3307/relay-log.info
+	binlog_cache_size = 1M
+	max_binlog_cache_size = 1M
+	max_binlog_size = 2M
+	expire_logs_days = 7
+	key_buffer_size = 16M
+	read_buffer_size = 1M
+	read_rnd_buffer_size = 1M
+	bulk_insert_buffer_size = 1M
+	#myisam_sort_buffer_size = 1M
+	#myisam_max_sort_file_size = 10G
+	#myisam_max_extra_sort_file_size = 10G
+	#myisam_repair_threads = 1
+	#myisam_recover
+
+	lower_case_table_names = 1
+	skip-name-resolve
+	slave-skip-errors = 1032,1062
+	replicate-ignore-db=mysql
+
+	server-id = 3
+
+	innodb_additional_mem_pool_size = 4M
+	innodb_buffer_pool_size = 32M
+	innodb_data_file_path = ibdata1:128M:autoextend
+	innodb_file_io_threads = 4
+	innodb_thread_concurrency = 8
+	innodb_flush_log_at_trx_commit = 2
+	innodb_log_buffer_size = 2M
+	innodb_log_file_size = 4M
+	innodb_log_files_in_group = 3
+	innodb_max_dirty_pages_pct = 90
+	innodb_lock_wait_timeout = 120
+	innodb_file_per_table = 0
+	[mysqldump]
+	quick
+	max_allowed_packet = 2M
+
+	[mysqld_safe]
+	log-error=/data/3307/mysql_hhf3307.err
+	pid-file=/data/3307/mysqld.pid
+
+5、所实例启动文件
+	启动实质:
+	mysqld_safe --default-file=/data/3306/my.cnf 2>&1 /dev/null &
+	mysqld_safe --default-file=/data/3307/my.cnf 2>&1 /dev/null &
+
+	停止实质:
+	mysqladmin -u root -ppassword -S /data/3306/mysql.sock shutdown
+	mysqladmin -u root -ppassword -S /data/3307/mysql.sock shutdown
+
+	3306示例:
+	#!/bin/sh
+	################################################
+	#this scripts is created by hhf 2016-8-25
+	################################################
+	#init
+	port=3306
+	mysql_user="root"
+	mysql_pwd="123456"
+	CmdPath="/application/mysql/bin"
+	mysql_sock="/data/${port}/mysql.sock"
+	#startup function
+	function_start_mysql()
+	{
+	    if [ ! -e "$mysql_sock" ];then
+	      printf "Starting MySQL...\n"
+	      /bin/sh ${CmdPath}/mysqld_safe --defaults-file=/data/${port}/my.cnf 2>&1 > /dev/null &
+	    else
+	      printf "MySQL is running...\n"
+	      exit
+	    fi
+	}
+	#stop function
+	function_stop_mysql()
+	{
+	    if [ ! -e "$mysql_sock" ];then
+	       printf "MySQL is stopped...\n"
+	       exit
+	    else
+	       printf "Stoping MySQL...\n"
+	       ${CmdPath}/mysqladmin -u ${mysql_user} -p${mysql_pwd} -S /data/${port}/mysql.sock shutdown
+	   fi
+	}
+	#restart function
+	function_restart_mysql()
+	{
+	    printf "Restarting MySQL...\n"
+	    function_stop_mysql
+	    sleep 2
+	    function_start_mysql
+	}
+	case $1 in
+	start)
+	    function_start_mysql
+	;;
+	stop)
+	    function_stop_mysql
+	;;
+	restart)
+	    function_restart_mysql
+	;;
+	*)
+	    printf "Usage: /data/${port}/mysql {start|stop|restart}\n"
+	esac
+
+6、授权可执行
+chown -R mysql:mysql /data
+find /data -type f -name mysql|xargs chmod +x
+
+find /data/ -type f -name "mysql"|xargs chown root.root
+find /data/ -type f -name "mysql"|xargs chmod 700
+
+7.配置环境变量(同但实例)
+echo "export PATH=/application/mysql/bin:$PATH" >> /etc/profile
+tail -1 /etc/profile
+source /etc/profile
+8.初始化
+cd /application/mysql/scripts
+./mysql_install_db --basedir=/application/mysql --datadir=/data/3306/data --user=mysql
+./mysql_install_db --basedir=/application/mysql --datadir=/data/3307/data --user=mysql
+初始化目的:
+创建基础的数据库文件，例如生成mysql库表等
+查看对应文件能找到文件
+
+9.启动
+/data/3306/mysql start
+/data/3307/mysql start
+
+10.登录(多实例登录特殊，要指定socket登录)
+mysql -S /data/3306/mysql.sock
+mysql -S /data/3307/mysql.sock
+远程连接不需要sock:
+mysql -h host -uroot -p -Pport
+
+11.设置密码
+mysqladmin -S /data/3306/mysql.sock -u root password '123456'
+mysqladmin -S /data/3307/mysql.sock -u root password '123456'
+
+12.优雅地关闭数据库
+1)mysqladmin -uroot -ppassword shutdown
+2)/etc/init.d/mysqld stop
+3)kill -USR2 `cat path/pid`  ----最好不用
+
+13.mysql数据库安全策略:
+a.设置root密码
+b.删除无用的账号
+c.删除默认存在的test数据库
+d.增加hhf用于并授予超级管理员，删除root
+grant all privileges on *.* to hhf@'localhost' identified by '123456' with grant option;
+flush privileges
+
+
+
+mysql命令行修改登录提示符:
+prompt \u@hhf \r:\m:\s->
+要永久生效需要修改my.cnf
+[mysql]
+prompt \u@hhf \r:\m:\s->
+
+查看帮助:help
+
+desc查看表结构
+
+通过mysql命令行更改密码(password(456)为用password加密)
+
+如何修改mysql密码:
+1、通过mysqladmin
+mysqladmin -uroot -p123456 password "newpasswd"
+2、通过修改mysql user表
+update mysql.user set password=password(456) where user='root' and host='127.0.0.1'
+------此方法适用于密码丢失后通过 --skip-grant-tables参数启动数据库后修改密码
+3、set 修改当前用户密码
+set password=password('password')
+
+mysql密码丢失找回:
+1.停止mysql
+sudo /etc/init.d/mysqld stop
+2.mysql忽略授权表的方式启动mysql
+mysql_safe --skip-grant-tables --user=mysql &
+	或者修改my.cnf加上 skip-grant-tables
+update mysql.user set password=password(123456) where user='root' and host='127.0.0.1'
+3.重启mysql
+mysqladmin -uroot -ppassword shutdown
+sudo /etc/init.d/mysqld start
+或者删除my.cnf的 skip-grant-tables
+
+
+SQL:
+SQL全称Structured Query Language，中文结构化查询语言，是一种关系型数据库中的数据进行定义和操作的语言方法，是一种对关系型数据库中的数据进行定义和操作的语言方法.
+
+SQL分类:
+一:数据查询语言(DQL)
+DQL全称Data Query Language,其语句，也称为数据检索语句。作用是从表中获取数据，确定数据怎样在应用程序中给出。关键字select是DQL用的最多的动词，其他DQL常见保留字有WHERE，ORDER BY,GROUP BY 和HAVING.这些保留字常与其他类型的SQL语句一起使用
+例如:
+select user,host from mysql.user order by user;
+
+二.数据操作语言(Data Manipulation Language) 
+DML语句包括: insert update delete分别是添加，修改，删除表中的行(数据)。也称为动作查询语言。
+
+三.事务处理语言(TPL)
+它的语句能确保DML语句影响的表的所有行及时更新。TPL语句包括 BEGIN TRANSANCTION COMMIT ROLLBACK
+
+四.流程控制语言(DCL)
+DCL全程(Data Control Language) 它的语句通过GRANT或REVOKE获得许可。
+
+五.数据定义语言(DDL)
+DDL全称(Data Definition Language),其语句包括动词CREATE和DROP。在数据库中创建表和删除表：为表加入索引
+
+六.指针控制语言(CCL)
+全程Cursor Control Language 它的语句像DECLARE CURSOR, FETCH INTO,UPDATE WHERE CURRENT 用于对一个或多个表单独行的操作。
+
+
+mysql数据库常见管理:
+1.创建数据库:
+	create datebase <数据库名>
+
+	show create database hhf\G
+	*************************** 1. row ***************************
+	       Database: hhf
+	Create Database: CREATE DATABASE `hhf` /*!40100 DEFAULT CHARACTER SET utf8 */  ---- 默认的是utf8字符集
+
+	创建字符集为utf-8的数据库
+	CREATE DATABASE hhf_1 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;    ----COLLATE后面是校对规则
+
+	字符集不一样是数据库乱码的罪魁祸首，如果编译的时候指定了特定的字符集，则以后创建数据库就不需要再指定了。
+
+2.查看
+	select version()  查看数据库版本
+	select now()   查看当前时间
+	select user()  查看当前用户
+
+3.通过grant命令创建用户并授权
+	1)通过grant
+	grant all privileges on dbname.* to username@host identified by 'password';
+	flush privileges;
+		grant:授权命令
+		all privileges 对应权限
+		on dbname.* 库和表
+		to username@host 用户名和客户端主机
+		identified by 'password' 用户密码
+		flush privileges:  写入文件
+	2)create和grant配合
+	创建用户username及密码passwd,授权主机localhost
+	CREATE USER 'username'@'localhost' IDENTIFIED BY 'passwd'
+	授权localhost用户通过用户username管理dbname数据库的所有权限,无需密码
+	grant all on test.* to 'hhf'@'localhost'
+	revoke insert on test.* from 'hhf'@localhost ---收回Insert权限
+
+	mysql -uroot -p123456 -e "show grants for hhf@localhost"
+	所以说 ALL PRIVILEGES权限有:
+	UPDATE,INSERT, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER
+
+4.建表
+	create table <表名>(
+	<字段名1> <类型1>,
+	...
+	<字段名n> <类型n>);
+	示例:
+	create table student(
+	id int(4) not null,
+	name char(20) not null,
+	age tinyint(2) not null default '0',
+	dept varchar(16) default null
+	);
+	===>show create table student;
+	Create Table: CREATE TABLE `student` (
+	  `id` int(4) NOT NULL,
+	  `name` char(20) NOT NULL,
+	  `age` tinyint(2) NOT NULL DEFAULT '0',
+	  `dept` varchar(16) DEFAULT NULL
+	) ENGINE=InnoDB DEFAULT CHARSET=latin1
+	查看表结构:
+	desc <表名>;  == describe
+
+5.索引
+主键索引:
+	1)建立主键索引语句如下
+	create table student(
+	id int(4) not null AUTO_INCREMENT,    
+	name char(20) not null,
+	age tinyint not null default '0',
+	dept varchar(16) default null,
+	primary key(id),
+	key index_name(name)
+	);
+	提示:
+	1.primary key(id) ===>主键
+	2.key index_name(name) ===>name 字段普通索引
+	3.AUTO_INCREMENT 表示自增
+	如果创建表时没创建主键，同下面命令添加主键:
+	alter table student change id id int primary key auto_increment;
+普通索引:
+	上面的key index_name(name)就是普通索引。
+	删除:
+	alter table student drop index index_name;  ==== drop index index_name on student;
+	添加普通索引:
+	alter table student add index index_name(name);
+对字段的前n个字符创建普通索引:
+	create index index_name on student(dept(8))
+为多个列创建联合索引:
+	create index index_name_dept on student(name,dept);
+为表的多个字段的前n个字符创建联合索引:
+	create index index_name_dept on student(name(8),dept(10));
+按条件列查询数据时，联合索引是有前缀生效特性的:
+	inedx(a,b,c) 仅a,ab,abc三个条件列可以走索引
+创建唯一非主键索引:
+	create unique index index_name on student;
+索引列的创建及生效条件:
+	问题1.既然索引可以加快查询速度，那么可以给所有列都创建索引?
+	======>索引不但浪费系统空间，更新数据库时还要维护索引数据。因此，索引是把双刃剑，不是越多越好
+	问题2.到底在哪些列上创建索引？
+	======> select user,host from mysql.host where host=...,索引一定要创建在where后的条件列，而不是select后面的选择数据列，另外尽量选择在唯一值多的大表上创建索引。
+索引总结:
+1、要在表的列上创建索引
+2、索引会加快查询速度，但会影响更新的速度
+3、索引不是越多越好，要在频繁查询的where后的条件列上创建索引
+4、小表或唯一值极小的列上不创建索引
+
+备份:参考笔记数据库1
+备份所有数据库(可压缩):
+	mysqldump -uroot -p123456 -B -A --events -x >/opt/bak_$(date +%F).sql
+恢复:
+	mysql -uroot -p123456 < /opt/bak_2016-08-26.sql
+插入数据:
+1.先建个test表:
+create table test(
+	id int(4) not null AUTO_INCREMENT,    
+	name char(20) not null,
+	primary key (id)
+);
+2.往表中插入数据有如下方法:
+1) 按规矩指定所有列名，并且每列都插入值
+insert into test(id,name) values('1','hhf');
+2)  由于id列为自增的，所有只在name列插入值
+insert into test(name) values('acf');
+3)如果不指定列，就要按照顺序从前往后插入
+insert into test values(3,'hehe');
+4)提高效率，一次插入多个
+insert into test (id,name) values(4,'haha'),(5,'hhf1'),(6,'hhf2');
+
+查询数据:
+select user,host from mysql.user;
+select user,host from mysql.user where user='root';  字符串查询要带引号
+select id,name from test where id>2 or id <4;
+select id,name from test  order by id;  ===>排序
+select id,name from test  order by id desc; ===>倒序排序
+
+修改表的数据:
+1)update 表明 set 字段=新值...where 条件(一定要注意条件)
+
+删除:
+delete from test where id=1; 删除test表中id为1的列 
+
+truncate table test;====>这是清空
+
+增删改表的字段:
+1)添加一个列:
+alter table <表名> add 字段 类型其他;
+示例:
+alter table test add sex char(2);
+2)指定位置添加列：
+alter table test add age tinyint after name; =====>指定添加在name 的后面
+
+更改表名:
+rename table <表名> to <表名>
+示例:
+rename table test to test1;
+
+
+mysql乱码:
+字符集是罪魁祸首.
+ show character set; 查看字符集及校对规则
+ SHOW VARIABLES LIKE ‘character%’; 查看设置的字符集
+
+1、查看建表语句，默认的字符集
+show create table student:
+| student | CREATE TABLE `student` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` char(20) NOT NULL,
+  `age` tinyint(2) NOT NULL DEFAULT '0',
+  `dept` varchar(16) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 |
+set names latin1
+保证set names 建表的字符集一样。
+
+
+修改默认字符集，以后建库会默认utf8编码。
+1、在[client]字段里加入default-character-set=utf8，如下：
+[client]
+default-character-set=utf8
+2、在[mysqld]字段里加入character-set-server=utf8，如下：
+[mysqld]
+character-set-server=utf8  5.1使用default-set-server=utf8
+
+3、在[mysql]字段里加入default-character-set=utf8，如下：
+[mysql]
+no-auto-rehash
+default-character-set=utf8
+

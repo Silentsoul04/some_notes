@@ -1,0 +1,23 @@
+1、以下端口对应的服务:
+	21:ftp
+	22:ssh
+	25:smtp
+	3306:mysql
+	873:rsync
+	161:snmp  监控
+	111: rpcbind
+	3389:远程桌面
+	80: http
+	443: https
+	110: pop
+	53: dns
+	514: rsyslog
+2、一台服务器6块600G磁盘，raid5后,计划部署mysql读服务，怎么规划分区合适
+	一台服务器6块600G磁盘，raid5后，总大小3T，此时无法装系统，解决方法是做raid5后，不重启装系统，而是在raid界面，继续分1个小的虚拟磁盘cd 200G,用这个200G的虚拟磁盘装系统，装完系统后再把剩余的2.8T分区通过parted
+3、a服务器ssh端口为52113，用户名为hhf，如何连接
+	ssh -p 52113 hhf@a
+4、查看apache进程
+	ps -ef | grep httpd
+	pstree -a | grep httpd
+5、192.168.0.0/24 网段通过192.168.0.1网关接入172.16.1.0/24 ip段，如何添加路由
+route add -net 172.16.1.0 netmask 255.255.255.0 gw 192.168.0.1

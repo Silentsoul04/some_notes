@@ -1,0 +1,163 @@
+rsync特性:
+	www.samba.org/ftp/rsync/rsync.html
+	可以拷贝特殊文件如链接文件，设备等，
+	可以有排除指定文件或目录同步的功能，相当于打包命令tar 的排除功能
+	可以做到保持原文件或目录的权限，时间，软硬连接，属主、组等所有属性均不改变
+	可实现增量同步，即只同步发生变化的数据，因此数据传输效率很高,tar -N
+	可以使用rcp,rsh,ssh等方式来配合传输文件(rsync本身不对数据加密)
+	可以通过socket传输文件和数据
+	支持匿名和人在的传输模式传输，可实现方便安全的进行数据备份和镜像
+
+rsync工作场景:
+	两台服务器之间数据同步 cron+rsync
+
+rsync相当于scp,cp,rm,但是优于他们每一个命令.
+rm 命令可以是客户端命令
+第一种工作模式
+	rsync -avz /etc/hosts /tmp  == cp
+	参数:
+	-v, --verbose 详细模式输出 
+	-a,--archive 归档模式，表示以递归方式传输文件，并保持所有文件属性，等于-rlptgoD 
+	-z, --compress 对备份的文件在传输时进行压缩处理 
+	-r, --recursive 对子目录以递归模式处理 
+	-l, --links 保留软链结 
+	-p, --perms 保持文件权限 
+	-t, --times 保持文件时间信息 
+	-g, --group 保持文件属组信息 
+	-o, --owner 保持文件属主信息 
+	-D, --devices 保持设备文件信息 
+	-e, --rsh=COMMAND 指定使用rsh、ssh方式进行数据同步 
+	-P,--partial 保留那些因故没有完全传输的文件，以是加快随后的再次传输 
+	--delete 删除那些DST中SRC没有的文件
+	--password-file=FILE 从FILE中得到密码
+	参考:http://www.jb51.net/LINUXjishu/66859.html
+
+第二种工作模式(使用shell程序(如rsh、ssh)实现pull push)
+	Access via remote shell:
+	 Pull: rsync [OPTION...] [USER@]HOST:SRC... [DEST]
+	 Push: rsync [OPTION...] SRC... [USER@]HOST:DEST
+	pull: 拉 从远程服务器到本地
+	push: 推 从本地到远端
+	示例:
+	rsync -avzP -e 'ssh -p 22' /tmp/ root@192.168.58.137:/tmp
+	rsync -avzP -e 'ssh -p 22' root@192.168.58.137:/tmp /tmp 
+	-e指定隧道
+	(/tmp/不带斜线包含目录本身,带斜线不包含目录本身)
+第三种工作模式(通过rsync服务/进程):
+	a.从本地机器拷贝文件到远程rsync服务器中(当DST路径信息包含"::")
+	rsync -avz /tmp rsync_backup@192.168.58.136::backup --password
+	b.从远程rsync服务器中拷贝文件到本地机(当SRC路径信息包含"::"分隔符时启动该模式)
+
+
+配置文件(要自己建):
+	/etc/rsyncd.conf
+
+#Rsync server
+#created by hhf 2016-8-13
+##rsyncd.conf start##
+uid = rsync
+gid = rsync
+use chroot = no
+max connections = 2000
+timeout = 600
+pid file = /var/run/rsyncd.pid
+lock file = /var/run/rsync.lock
+log file = /var/log/rsyncd.log
+ignore errors
+read only = false
+list = false
+hosts allow = 192.168.58.0/24
+hosts deny = 0.0.0.0/32
+auth users = rsync_backup
+secrets file = /etc/rsync.password
+#####################################
+[backup]
+comment = www by hhf 2016-8-13
+path = /backup
+
+echo "rsync_backup:hhf960214">/etc/rsync.password
+添加用户:
+useradd rsync -s /sbin/nologin -M
+id rsync
+
+mkdir /backup
+chown -R rsync:rsync /backup
+
+启动服务(没有启动脚本，要自己写):
+	rsync --daemon
+	netstat -lntup|grep rsync
+
+rsync服务端配置步骤:
+	1、 vi /etc/rsyncd.conf
+	2、创建用户
+		useradd rsync -s /sbin/nologin -M
+		id rsync
+		mkdir /backup
+		chown -R rsync:rsync /backup
+	3、创建密码文件：
+		echo "rsync_backup:hhf960214">/etc/rsync.password
+		chmod 600 /etc/rsync.password 
+		#### 由于rsyncd.password 文件的格式是"用户名:密码"，没有进行加密，所以要禁止other的读权限。
+		#### 改权限(600或400)非常非常非常重要，不然会出现下面的内容
+		@ERROR: auth failed on module backup
+		rsync error: error starting client-server protocol (code 5) at main.c(1503) [sender=3.0.6]
+
+	4、启动服务:
+		rsync --daemon
+	5、添加开机自启动
+		echo "rsync --daemon" >> /etc/rc.local
+
+rsync客户端:
+1、创建一个密码文件
+	echo "hhf960214">/etc/rsync.password
+	chmod 600 /etc/rsync.password   
+2、传文件
+	rsync -avz /tmp rsync_backup@192.168.58.136::backup --password-file=/etc/rsync.password
+	(backup对应的是配置文件里面的backup模块)
+	rsync -avz rsync_backup@192.168.58.136::backup /tmp --password-file=/etc/rsync.password
+ 
+rsync常见错误总结：
+http://wjw7702.blog.51cto.com/5210820/1148808
+
+pkill + 程序名字 杀进程
+rsync --daemon --address=192.168.58.136
+--address 绑定地址(安全选项)
+
+杀进程方法:
+pkill+进程名(一般是ps -ef出现的进程名)
+killall 连续杀，直到提示杀的
+kill+进程号(kill -9 强制杀)
+
+要求:
+	1、web服务器A和备份服务器B的备份目录都为backup
+	2、系统配置文件但不限于
+		a.定时任务服务的配置文件(/var/spool/cron/root)
+		b.开机自启动配置文件(/etc/ec.local)
+		c.日常脚本的目录(/server/scripts)
+		d.防火墙iptables的配置文件(/etc/spsconfig/iptables)
+		e.配置文件，日志,目录分别打包
+	3、web服务器站点目录假设为/var/www/html
+	4、web服务器A访问日志(假设为/app/logs)
+	5、web服务器保留打包后的7天的备份数据即可，备份服务器要保留6个月的数据副本
+	6、备份服务器B上按照备份服务器的IP为目录保存，打包的文件按照时间名字保存
+
+
+#!/bin/sh
+IP=$(ifconfig|awk -F '[: ]+' 'NR==2 {print $4}')
+Path="backup/$IP"
+mkdir /backup/$IP -p
+cd / && \
+tar zcf $Path/www_$(date +%F).tar.gz var/www/html
+tar zcf $Path/conf_$(date +%F).tar.gz var/spool/cron/root etc/rc.local etc/sysconfig/iptables server/scripts
+tar zcf $Path/logs_$(date +%F).tar.gz app/logs/
+
+##to bak server
+rsync -avz /backup/ rsync_backup@192.168.58.138::backup --passwpord-file=/etc/rsync.password
+
+#delete files
+find /backup -type f -name "*.tar.gz" -mtime +7|xargs rm -f
+
+
+
+
+

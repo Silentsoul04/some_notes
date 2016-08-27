@@ -1,0 +1,116 @@
+free -m 查看内存
+	[root@localhost ~]# free -m
+	             total       used       free     shared    buffers     cached
+	Mem:           980        408        572          1         53        154
+	-/+ buffers/cache:        201        779  -------这才是剩余内存(linux会将不用的内存缓存起来)
+	Swap:          818          0        818
+	buffers:写入缓存区 sync将缓冲区数据写入磁盘
+	cache: 读取数据的缓存区
+
+磁道柱面扇区总结:
+1、一块磁盘有2-14个盘面，每个盘片有2个面，每个面对应2个读写磁头，用磁头号来区分盘面，即盘面数就是磁头数，盘片数*2=磁头数=盘面数
+2、不同盘面的磁道被划分为多个扇形区域，每个区域就是一个扇区(sector)
+3、同一个盘面，以盘片中心为圆心，每个不同半径的圆形轨迹就是一个磁道(track)
+4、不同盘面相同半径的磁盘组成一个圆柱面就是柱面(cylinder)
+5、数据信息记录可表示为:某磁头，某磁道(柱面)，某扇区
+
+磁道:
+	每个盘片有两个面，都可记录信息。盘片表明以盘片中心为圆心，用于记录数据的不同半径的圆形磁形磁化轨迹就称为磁道。磁化轨迹是磁化区域，是看不见的。磁道看起来是一个平面圆周形
+扇区:
+	盘面由圆心向四周画直线，不同的磁道被直线分成很多扇形(弧形)的区域，每个弧形的区域叫做扇区，每个扇区一般为512字节，扇区看起来就是圆弧或扇形
+柱面:
+	磁盘中，不同的盘片(或盘面)相同半径的磁道轨迹从上到下所组成的圆柱形区域就称为柱面，柱面看起来是一个圆柱形、
+
+计算磁盘容量:
+方法一: 
+磁盘容量 = 512B*扇区数/每磁道*磁道数/每盘面*磁头数
+           ----------每个磁道的大小
+           --------------------------------一个盘面的大小
+方法二:
+磁盘容量 = 柱面数(磁道数)*柱面大小(磁道大小*磁头数)=磁道数*磁道大小*磁头数=磁道数*512B*扇区数*磁头数
+
+
+255 heads, 63 sectors/track, 1044 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes 
+磁盘大小 = 512*255*63*1044 = 8587192320
+
+磁盘分区重点:
+1)磁盘分区实质是针对上述0磁头0磁道1扇区的前446字节接下来的64bytes的分区表进行设置，即主要是划分起始以及结束磁头号，及扇区号和柱面号 。
+2)分区工具有fdisk(适合小于2T的磁盘分区)，parted(适合大于2T的磁盘分区，可以对小于2T的磁盘分区)，fdisk首选，只有大于2T才会选parted
+	补:一台服务器6块600G磁盘，raid5后，总大小3T，此时无法装系统，解决方法是做raid5后，不重启装系统，而是在raid界面，继续分1个小的虚拟磁盘cd 200G,用这个200G的虚拟磁盘装系统，装完系统后再把剩余的2.8T分区通过parted
+3)一块磁盘的分区表仅有64bytes大小，每个分区表占用16字节，因此一块磁盘仅支持四个分区的信息，即主分区+扩展分区总量不超过4个人
+4)扩展分区是按照柱面(cylinder)来划分的
+5)扩展分区不能直接使用的，还需要在扩展分区的基础上创建逻辑分区才行
+6)扩展分区有自己的分区表，因此，扩展分区的逻辑分区可以有多个
+磁盘在使用前一般需要进行分区，方然如果不分区直接格式化使用也是没问题的，但这不是常见情况。磁盘分区有主分区，扩展分区，逻辑分区之分，一块硬盘最多有4个分区表信息,其中一个主分区可以一个扩展分区代替，且一块硬盘只能有一个逻辑分区
+
+parted是一个磁盘分区管理工具，比fdisk更灵活，功能也更加丰富，同时还支持GUID分区表，这在IA64平台上管理磁盘时非常有用，它同时支持交互模式和非交互模式，它除了能够进行分区的添加删除等常见操作外还能移动分区，制作文件系统，调整文件系统大小，复制文件系统。
+fdisk的分区和parted分区是不兼容的
+
+fdisk -l 列出分区表
+fdisk /dev/sda2 对/dev/sda2分区
+	m 查看帮助
+	n 创建分区
+	p 打印分区表
+	q 退出
+	w 保存分区表
+	d 删除分区
+
+mkfs.ext4 /dev/sdb1
+分区挂载: 
+mount /dev/sdb1 /data/
+[root@localhost ~]# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2       6.7G  5.0G  1.4G  79% /
+tmpfs           491M   72K  491M   1% /dev/shm
+/dev/sda1       283M   57M  212M  22% /boot
+/dev/sdb1       4.8G   10M  4.6G   1% /data
+
+blkid:
+	查看uuid 和设备名是等价的
+设置开机挂载:
+	vi /etc/fstab 
+	写入:
+	/dev/sdb1               /data                   ext4    defaults        0 0
+	设备                     挂载点                文件系统类型  属性     备份 自检
+parted分区:
+	交互式:
+	parted /dev/sda2
+	非交互式分区手动输入提示示例:
+	parted /dev/sdb mklabel gpt
+	parted /dev/sdb mkpart primary 0 500
+	parted /dev/sdb mkpart primary 501 1000
+	parted /dev/sdb p
+	mkfs -t ex4 /dev/sdb1 /dev/sdb2
+	mount /dev/sdb2 /tmp
+	非交互式忽略提示示例:
+	parted /dev/sdb mklabel gpt yes
+	parted /dev/sdb mkpart primary ext4 0 100 ignore
+	parted /dev/sdb mkpart primary linux-swap 101 8192 ignore
+	parted /dev/sdb logical ext4 8193 100GB ignore
+	parted /dev/sdb logical ext4 101GB 3000GB ignore
+	parted /dev/sdb exit
+
+分区:fdisk,parted
+	实质:设置修改分区表
+格式化:
+	实质:创建文件系统
+	mkfs -t ext4 /dev/sdb1
+	tune2fs -c -l /dev/sdb1
+挂载:
+	实质:为文件系统指定访问入口
+	mount -t ext4 /dev/sdb1 /mnt
+开机自动挂载:
+	/etc/fstab 
+	/dev/sdb1               /data                   ext4    defaults        0 0
+	设备                     挂载点                文件系统类型  属性     备份 自检
+挂载检查:
+	df -h
+	cat /proc/mounts
+
+du -sh
+dumpe2fs - dump ext2/ext3/ext4 filesystem infomation 
+partprobe 通知系统分区表的变化
+
+raid 0 1 5 10:
+	http://blog.chinaunix.net/uid-639516-id-2692517.html

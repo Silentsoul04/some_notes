@@ -1,0 +1,123 @@
+网线:
+568A
+568B 橙白 橙 绿白 蓝 蓝白 绿 棕白 棕
+
+交换机: 一种用于电信号转发的网络设备
+
+路由器:连接因特网中各局域网、广域网的设备。
+
+OSI七层网络模型:
+	物理层，数据链路层，网络层，传输层，会话层，表示层，应用层
+	需要了解OSI7层模型，以及这些层上常见的都对应哪些协议(通信双方为了实现通信而设计的约定或者通话规则)。
+	http协议，tcp/ip协议
+必须会:
+	1、tcp/ip的三次握手和四次断开
+	2、http协议的工作原理
+在OSI七层模型中，每一层都有极其专用的数据规范、协议，也有一些唯一性标识，用来在网络中标记不同的网络节点来作为传输的数据做导向
+     层次                      唯一性标识         相关协议
+上三层(应用层，表示层，会话层)   进程号           http,ftp,https,dns,ssh,telnet
+第四层(传输层)                   端口号           tcp,udp
+第三层(网络层)                   ip地址(32位)     ip
+下两层(物理层，数据链路层)       mac地址(48位)    ethernet
+
+
+
+
+dns是什么:
+	DNS(domain name system)
+DNS能做什么:
+	1、解析A记录 域名变成ip
+	2、解析cname记录(类似于alias，常被cdn服务商应用)
+	3、mx记录(邮件，常用于搭建邮件服务)
+	4、PTR 反向解析(ip->域名，常用于邮件服务)
+A记录解析流程:
+	浏览器-->域名-->网站服务器的ip地址-->ip地址对应的网站服务器
+dns树状数据库:
+	根服务器:全球有13台
+	顶级域名: org,com,net 
+dns解析过程:
+	http://369369.blog.51cto.com/319630/812889/
+dns解析命令:
+	dig + 域名
+	nslookup 
+		[root@localhost ~]# nslookup
+		> ichenfei.com    
+		Server:		192.168.58.2
+		Address:	192.168.58.2#53
+		Non-authoritative answer:
+		Name:	ichenfei.com
+		Address: 119.29.58.55
+通过命令查看解析过程:
+	dig @8.8.8.8 www.baidu.com +trace
+
+网卡配置: 
+	/etc/sysconfig/network-scripts/ifcfg-eth0
+网卡生效:
+	ifdown eth0
+	ifup   eth0
+	所有网卡: /etc/init.d/network restart
+	网卡配置的DNS优先于/etc/resolv.conf配置的，并且重启网卡会把/etc/resolv.conf的覆盖
+修改主机名的规范步骤:
+a) hostname hhf 临时生效
+b) vi /etc/sysconfig/network
+c) vi /etc/hosts
+
+网关配置:
+
+第一生效文件:
+	/etc/sysconfig/network-scripts/ifcfg-eth0
+第二生效文件:
+	/etc/sysconfig/network
+第三：命令行(临时生效)
+	route -n
+	route add default gw 192.168.1.1
+	route del default gw 192.168.1.1
+
+局域网地址:
+	10.0.0.0/8(10.0.0.0到10.255.255.255)
+	171.26.0.0/12(171.26.0.0到171.26.255.255)
+	192.168.0.0/16(192.168.0.0到192.168.255.255)
+
+已知端口(22)查服务名:
+	1、
+	lsof -i tcp:22
+	[root@localhost ~]# lsof -i :22
+	COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+	sshd    2052 root    3u  IPv4  12191      0t0  TCP *:ssh (LISTEN)
+	sshd    2052 root    4u  IPv6  12193      0t0  TCP *:ssh (LISTEN)
+	sshd    2875 root    3r  IPv4  17653      0t0  TCP 192.168.58.132:ssh->192.168.58.1:58657 (ESTABLISHED)
+	2、netstat -lntup|grep 22
+
+抓包工具:
+tcpdump 
+	tcpdump -n icmp -i eth0
+nmap
+
+网络故障排除:
+1、 ping www.baidu.com  (icmp协议)
+	ping -c3 -i2 -s512 www.baidu.com
+2、traceroute (-n 不解析) www.baidu.com   (windows用tracert (-d))
+
+局域网机器无法上网解决:
+	(一)
+	a.ping baidu.com
+	b.ping 网关(排除物理链路，网线，网卡，驱动,ip设置等)
+		1、如果ping 网关不通，则查看ip设置，然后ping 自身ip或ping网内其他机器
+			1.1、如果ping自己ip不通：检查ip设置、网卡驱动、物理链路
+			1.2如果ping网内其他奇迹是通的，网关不让你上网了
+	c.ping网关通的情况下，检查dns设置
+		1、ping 公网ip，看通畅情况
+		2、host/dig/nslookup 检查域名解析
+	d.上网路由器问题(配置和硬件)以及ISP线路问题
+		登录路由器检查上级线路，打电话给ISP技术
+	e.辅助排查：其他人能否上网，IP地址冲突，ARP病毒，核心交换机坏了，交换机环路(看日志)
+	(二)
+	大面积上不了网:
+		路由器，ISP,核心交换机，ARP病毒欺骗病毒，网关地址被占用，核心交换机坏了，交换机环路
+
+打开网站服务器访问慢排错:
+
+
+
+详解linux netstat输出的网络连接状态信息:
+http://oldboy.blog.51cto.com/2561410/1184139

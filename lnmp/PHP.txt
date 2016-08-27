@@ -1,0 +1,225 @@
+cgi：
+	CGI全称通用网关接口(common gateway interface)用于http服务与其他机器上的程序通信交流的一种工具，cgi程序必须运行在亡灵服务器上
+	传统cgi接口方式主要缺点是性能比较差，因为每次http服务器遇到动态程序时都要重新启动解析器执行解析，然后结果返回给http服务器，这在高并发时，几乎是不可用的，因此就诞生了fastcgi。另外传统的cgi接口安全性也很差，现在很少被使用了
+fastcgi:
+	fastcgi是一个可伸缩的，高效的在http服务器和动态脚本语言间通信的接口(fastcgi 接口在linux下是个socket(这个socket可以是文件socket，也可以是ip port))，主要优点是把动态语言和http服务器分离出来，多数流行的http服务器都支持fastcgi，包括apache,nginx,lightted同时fastcgi也被许多脚本语言支持，比较流行的为PHP，fastcig接口才有cs架构。当http服务遇到动态程序时，可以将其交给fastcgi处理.这种方式让http服务器专一的处理静态请求或者将动态脚本服务器的结果返回给客户端，这在很大程度上提高了整个应用系统的功能。
+fastcgi重要特点:
+	1、fastcgi是http服务器和动态脚本语言间通信的接口或者工具
+	2、fastcig有点事把动态语言解析和http服务器分隔开来
+	3、nginx，apache，lighttpd以及多数动态语言都支持fastcgi.
+	4、fastcgi接口采用c/s架构，分为客户端和服务端
+	5、php等动态服务端可以启动多个fastcgi的守护程序(例如php-fpm(fcgi process mangement))
+	6、http服务通过(例如nginx fastcgi_pass)fastcgi客户端和动态语言fastcgi服务端通信(例如php-fpm)
+fastcgi原理:
+	nginx不支持对外部动态程序的直接调用或解析，所有外部程序必须通过fastcgi接口来调用。fastcgi接口可以是socket。为了调用fastcgi程序，还需要一个fastcgi的wrapper(可以理解为用于启动另一个程序的程序)，这个wrappper绑定在某个固定socket上，如端口或者文件socket.当nginx将cgi请求发送给这个socket时候，通过fastcgi接口，wapper接收到请求，然后派生出一个新的线程，这个线程调用解释器或者外部程序处理脚本并返回数据。接着wapper再将返回的数据通过fastcgi接口，沿着固定的socket传递给nginx；最后nginx将返回的数据在发送给客户端。
+
+编译安装php：
+php安装需要的库:
+rpm -qa zlib-devel libxml2-devel libjpeg-devel libiconv-devel
+rpm -qa freetype-devel libpng-devel gd-devel curl-devel
+yum install zlib-devel libxml2-devel libjpeg-devel libiconv-devel freetype-devel libpng-devel gd-devel curl-devel
+yum install libxslt-devel -y
+
+libiconv-devel:
+wget http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz
+./configurate --prefix=/usr/local/libiconv
+
+libcrypt库:
+	https://sourceforge.net/projects/mcrypt/files/Libmcrypt/2.5.8/libmcrypt-2.5.8.tar.gz/download
+wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-6.repo
+yum install libmcrypt-devel -y
+
+mhash(epel源):
+yum install mhash-devel mhash
+
+mcrypt:
+yum install mcrypt
+
+wget http://cn2.php.net/get/php-5.6.24.tar.gz
+tar zxf php-5.6.24.tar.gz
+
+
+
+./configure --prefix=/application/php-5.5.38  \
+--with-mysql=/application/mysql \
+--with-iconv-dir=/usr/local/libiconv \
+--with-freetype-dir \
+--with-jpeg-dir \
+--with-png-dir \
+--with-zlib \
+--with-libxml-dir=/usr/ \
+--enable-xml \
+--disable-rpath \
+--enable-bcmath \
+--enable-shmop \
+--enable-sysvsem \
+--enable-inline-optimization \
+--with-curl \
+--enable-mbregex \
+--enable-fpm \
+--enable-mbstring \
+--with-mcrypt \
+--with-gd \
+--with-openssl \
+--with-mhash \
+--enable-pcntl \
+--enable-sockets \
+--with-xmlrpc \
+--enable-zip \
+--enable-soap \
+--enable-short-tags \
+--enable-static \
+--with-xsl \
+--with-fpm-user=nginx \
+--with-fpm-group=nginx \
+--enable-ftp 
+--enable-opcache=no
+
+make前:
+ln -s /application/mysql/lib/libmysqlclient.so.18 /usr/lib64/
+
+make
+make install
+
+cp php.ini-development /application/php/lib/php.ini
+cd /application/php/etc
+cp php-fpm.conf.default php-fpm.conf
+vi php-fpm.conf
+修改:
+	pid = /app/logs/php-fpm.pid
+	error_log = /app/logs/php-fpm.log
+	log_level = error
+	rlimit_files = 32768
+	events.mechanism = epoll
+	listen.owner = nginx
+	listen.group = nginx
+
+	;pm.max_children = 1024
+	;lpm.min_spare_servers = 20  这两个应该有问题
+
+	pm.process_idle_timeout = 15s;
+	pm.max_requests = 2048
+	slowlog = /app/logs/$pool.log.slow
+	request_slowlog_timeout = 10
+	php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f 853885165@qq.com
+
+启动:
+/application/php/sbin/php-fpm
+ps -ef | grep php-fpm
+
+
+5.6编译:
+./configure --prefix=/application/php-5.6.24  \
+--with-mysql=mysqlnd \
+--with-pdo-mysql=mysqlnd \
+--with-iconv-dir=/usr/local/libiconv \
+--with-freetype-dir \
+--with-jpeg-dir \
+--with-png-dir \
+--with-zlib \
+--with-libxml-dir=/usr/ \
+--enable-xml \
+--disable-rpath \
+--enable-bcmath \
+--enable-shmop \
+--enable-sysvsem \
+--enable-inline-optimization \
+--with-curl \
+--enable-mbregex \
+--enable-fpm \
+--enable-mbstring \
+--with-mcrypt \
+--with-gd \
+--with-openssl \
+--with-mhash \
+--enable-pcntl \
+--enable-sockets \
+--with-xmlrpc \
+--enable-zip \
+--enable-soap \
+--enable-short-tags \
+--enable-static \
+--with-xsl \
+--with-fpm-user=nginx \
+--with-fpm-group=nginx \
+--enable-ftp
+
+
+nginx.conf
+        location ~ .*\.php$ {
+            root           html/www;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            #fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+            include        fastcgi.conf;
+        }
+
+安全设置:
+chown -R root.root www/
+find ./www/ -type f|xargs chmod 644
+find ./www/ -type d|xargs chmod 755
+chmod -R nginx.nginx www/wp-content
+
+phpinfo.php
+<?php
+phpinfo()
+?>
+
+wordpress rewrite规则:
+
+        location / {
+            index  index.php index.html index.htm;
+        if (-f $request_filename/index.html){
+            rewrite (.*) $1/index.html break;
+        }
+        if (-f $request_filename/index.php){
+            rewrite (.*) $1/index.php;
+        }
+        if (!-f $request_filename){
+            rewrite (.*) /index.php;
+        }
+        }	
+		注:if和()直接要加空格
+
+bbs rewrite规则:
+        rewrite ^([^\.]*)/topic-(.+)\.html$ $1/portal.php?mod=topic&topic=$2 last;
+        rewrite ^([^\.]*)/article-([0-9]+)-([0-9]+)\.html$ $1/portal.php?mod=view&aid=$2&page=$3 last;
+        rewrite ^([^\.]*)/forum-(\w+)-([0-9]+)\.html$ $1/forum.php?mod=forumdisplay&fid=$2&page=$3 last;
+        rewrite ^([^\.]*)/thread-([0-9]+)-([0-9]+)-([0-9]+)\.html$ $1/forum.php?mod=viewthread&tid=$2&extra=page%3D$4&page=$3 last;
+        rewrite ^([^\.]*)/group-([0-9]+)-([0-9]+)\.html$ $1/forum.php?mod=group&fid=$2&page=$3 last;
+        rewrite ^([^\.]*)/space-(username|uid)-(.+)\.html$ $1/home.php?mod=space&$2=$3 last;
+        rewrite ^([^\.]*)/blog-([0-9]+)-([0-9]+)\.html$ $1/home.php?mod=space&uid=$2&do=blog&id=$3 last;
+        rewrite ^([^\.]*)/(fid|tid)-([0-9]+)\.html$ $1/index.php?action=$2&value=$3 last;
+        rewrite ^([^\.]*)/([a-z]+[a-z0-9_]*)-([a-z0-9_\-]+)\.html$ $1/plugin.php?id=$2:$3 last;
+        if (!-e $request_filename) {
+            return 404;
+        }
+
+        列表页:
+        http://bbs.ichenfei1.com/forum-41-1.html
+        内容页:
+        http://bbs.ichenfei1.com/thread-2-1-1.html
+
+        浏览器访问的是：http://bbs.ichenfei1.com/forum-41-1.html　会被nginx监听到并读取nginx.conf读取对应的rewrite规则.
+        rewrite ^([^\.]*)/forum-(\w+)-([0-9]+)\.html$ $1/forum.php?mod=forumdisplay&fid=$2&page=$3 last;
+
+        rewrite匹配:
+        http://bbs.ichenfei1.com/forum-41-1             .html
+        ^([^\.]*)/               forum-(\w+)-([0-9]+)\  .html$        
+        $1/forum.php?mod=forumdisplay&fid=$2&page=$3
+   ===  http://bbs.ichenfei1.com/forum.php?mod=forumdisplay&fid=41&page=1
+   		内容页:
+   		rewrite ^([^\.]*)/thread-([0-9]+)-([0-9]+)-([0-9]+)\.html$ $1/forum.php?mod=viewthread&tid=$2&extra=page%3D$4&page=$3 last;
+
+   		浏览器访问:
+   		http://bbs.ichenfei1.com/thread-2-1-1.html
+   		$1=http://bbs.ichenfei1.com   $2=2 $3=1 $4=1
+   		==http://bbs.ichenfei1.com/forum.php?mod=viewthread&tid=2&extra=page%3D1&page=1
+
+
+cd bbs/
+wget http://download.comsenz.com/DiscuzX/3.2/Discuz_X3.2_SC_UTF8.zip
+unzip Discuz_X3.2_SC_UTF8.zip 
+mysql -uroot -p123456
+create database bbs;
+grant all on bbs.* to bbs@'192.168.58.%' identified by '123456'

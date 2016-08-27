@@ -1,0 +1,519 @@
+find 查找命令
+-name 查找文件名
+-type 查找类型
+-exec 对查找结果进行处理
+find . -type f -exec ls {} \;
+	{} :表示查找的内容
+	\; 转义
+
+echo:   打印输出内容
+-n 不换行输入
+-e 解析转义字符 \t tab \n 换行
+echo "aaaa"
+echo "aacs" > a.txt  替换(先清空，在加入)
+echo "aadcsv" >> a.txt 追加，不清空
+
+
+
+cat： 
+cat < EOF
+EOF
+
+
+特殊字符命令：
+> 或1> 重定向,会清楚文件的数据，增加新数据
+>> 或 1>> 追加重定向，文件末尾追加内容，不会删除已有内容
+<0 或输入重定向
+<<0 追加输入重定向
+2> 错误重定向 
+2>> 错误追加重定向
+下面三种方法是等价的:
+/dev/null  空设备
+不让有输出
+2) 1>/dev 2>/dev/null
+2)***** 1>/dev/null 2>&1
+3)&>/dev/null
+
+1.标准输入(stdin): 代码为0 ,使用< 或<< 数据流向从右向左
+2.标准输出(stdout): 代码为1,使用>或>> 数据流向从左到右
+3.错误输出(stderr)：代码为2,是用2>或2>>
+箭头指向就是数据流向
+\: 让一个有意义的字符脱掉马甲，不转义
+
+linux三剑客 sed awk sed
+grep == 过滤器 (把包含的字符串过滤出来)
+  -v 排除
+  grep -v "aaa" test.txt
+  = cat test.txt | grep -v "aaa" test.txt
+  -o 仅显示匹配的内容
+  -c 计算找到'搜索字符数的次数'
+  -i  不区分大小写
+  -E  扩展的grep，即egrep，过滤多个字符串
+  
+  eg: grep -E "3306|1521"  /etc/services
+  -B 除了显示匹配的一行外，并显示该行之前的num行
+  -A 除了显示匹配的一行外，并显示该行之后的num行
+  -C 除了显示匹配的一行外，并显示该行之前后的num行
+  示例  grep 30 -B 10 test.txt
+      = grep 20 -A 10 test.txt 
+      = grep 25 -C 5 test.txt 
+
+
+sed：
+  过滤(取列)  sed -n '/过滤的内容/处理的命令' 文件 
+            -n 表示取消sed的默认输出
+        处理的命令： p: 打印 
+                     d: 删除(只是改变输出结果，如果要改变文件内容 -n改为-i) 	
+    示例： 
+        sed -n '/a/p'  test.txt  = grep "a" test.txt
+	sed替换文件内容： 
+	   sed -i 's#需要替换的内容#替换的内容#g' 文件  
+	   s: 替换 g:global 全局 #分隔符，可用/@等代替
+	   例:sed -i 's#hello#hello1#g' 3.txt 
+
+
+awk 一门语言，过滤内容(取列) 删除 打印
+    awk '{print &1}' 文件   打印第一列
+    awk -F ":" '{print $1}' /etc/passwd  -F 指定分隔符
+    示例：
+    awk '{if(NR<31 && NR>19) printf $1 "\n" }' test.txt 
+    <==&1第一列 $2第二列 $0整行 &NF 最后一列 NR 行号 &&(and)
+
+alias:别名
+unalias:取消别名 
+别名生效的文件 /root/.bashrc
+所有用户生效 /etc/bashrc或/etc/profile定义 sourcr /etc/profiles生效
+{}示例： 
+	echo {0..10}
+	0 1 2 3 4 5 6 7 8 9 10
+	echo {a..z}
+	a b c d e f g h i j k l m n o p q r s t u v w x y z
+	mkdir {0..100}创建0-100文件夹
+. 当前目录
+.. 上一次目录
+- 上一次目录
+
+seq 序列 = sequence
+	seq 5 打印1-5
+	seq 2 10  2-10
+	seq 1 2 10 1-10的基数
+	seq -s 指定分隔符  seq -s "=" 3  1=2=3
+	seq 100 > test.txt  生成1-100写入到test.txt中去
+
+
+head 头 取文件钱n行 默认10行 如果要取头3行 head -n 3
+tail 尾巴 取文件的最后n行 默认是10行 如果要去最后3行 tail -n 3
+      -f 跟踪文件尾部实时变化
+
+取test.txt文件的前20-30行：
+	sed -n '20,30p' test.txt  简单高效
+	grep 30 -B 10 test.txt
+	awk '{if(NR<31 && NR>19) printf $0 "\n" }' test.txt
+	head -n 30 test.txt | tail -n 11    效率不高
+
+快捷键:
+	ctrl+a 光标到开头
+	ctrl+e 光标到结尾
+	ctrl+u 删掉光标之前的内容
+	ctrl+k 删掉光标之后的内容
+	ctrl+d 删除光标所在位置上的字符
+	ctrl+l 清屏 = clear 
+  ctrl+z 将任务中断,但是此任务并没有结束,他仍然在进程中他只是维持挂起的状态
+  fg  回到被中断的任务
+
+
+lrzsz:
+rz -y 上传覆盖
+sz -y 覆盖下载
+
+查看linux系统信息 
+uname -a 所以
+-r 内核 -m 64位还是32位 -n 主机名 
+hostname 查看主机名 
+whoani 查看当前用户
+useradd  adduser添加用户
+userdel 删除用户
+sudo su - 用户 切换用户,-把环境变量切换过去
+
+runlevel  运行级别 /etc/inittab
+0:关机
+1:单用户模式
+2:多用户模式 没有网络系统nfs
+3:完整多用户模式
+4:没用
+5:桌面模式 需桌面软件包
+6:重启模式
+init 切换运行模式 init 3
+
+ls -al /etc/rc.d/rc3.d/   --查看rc3.d的开机脚本启动顺序
+
+
+
+chkconfig  查看或修改服务开机运行状态
+使用范例：
+chkconfig --list        #列出所有的系统服务
+chkconfig --add httpd        #增加httpd服务
+chkconfig --del httpd        #删除httpd服务
+chkconfig --level httpd 2345 on        #设置httpd在运行级别为2、3、4、5的情况下都是on（开启）的状态
+chkconfig --list        #列出系统所有的服务启动情况
+chkconfig --list mysqld        #列出mysqld服务设置情况
+chkconfig --level 35 mysqld on        #设定mysqld在等级3和5为开机运行服务，--level 35表示操作只在等级3和5执行，on表示启动，off表示关闭
+chkconfig mysqld on        #设定mysqld在各等级为on，“各等级”包括2、3、4、5等级
+
+iptables -L -n 查看防火墙
+/etc/init.d/iptables start|stop|restart|status 关闭防火墙
+
+linux文本比较
+diff或者vimdiff 很好用
+使用：http://www.ibm.com/developerworks/cn/linux/l-vimdiff/
+
+环境变量：
+	PATH :系统环境变量，执行ls,cp等内置命令时，系统会查找
+	PATH里对应的路径是否有，如果内有就报告找不到命令。
+	当执行whinch cp查看命令所在路径时候，也是从PATH变量去搜索。
+	临时修改 export PATH"/tmp:$PATH",永久修改前面临时修改的命令放到/etc/profile下，使用source /etc/profile是的修改立刻生效
+
+语言配置: /etc/sysconfig/i18n
+
+date 显示时间
+date -s 修改时间
+date -s "2016/7/15 11:11"
+
+linux互联网时间同步：
+    ntpdate time.nist.gov(时间服务器)
+	echo "*/5 * * * * /usr/sbin/ntpdate time.nist.gov > /dev/null 2>&1" >> /var/spool/cron/root
+
+/var/spool/cron/root   定时任务crond配置文件
+
+
+Centos源:
+/etc/yum.repos.d/CentOS-Base.repo 
+换yum源：
+cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak
+wget -O /etc/yum.repos.d/CentOS-Base.repo  http://mirrors.aliyun.com/repo/Centos-6.repo
+
+wget 下载 
+    -O 指定下载到什么地址，改成什么名字
+    --spider 爬取，不会下载，只是检查网站是否能网站
+    -t=seconds 指定超时时间 --timeout
+    -tries=次数 指定重试的次数
+    -q  安awk静下载，关闭输出 = --quiet
+
+
+cat /proc/meminfo  内存信息
+cat /proc/cpuinfo  cpu信息
+cat /proc/mounts   挂载信息
+
+setup 配置网络等信息
+
+重启网卡:
+/etc/init.d/network restart 
+ifdown eth0 && ifup eth0
+网卡信息:
+cat /etc/sysconfig/network-scripts/ifcfg-eth0 
+
+
+dns配置文件: /etc/resolv.conf  重启会被清掉
+网卡的dns优先于resolv.conf
+
+df -h 查看磁盘挂载信息
+
+/etc/fstab  有关文件系统的静态信息，设置文件系统挂载信息
+
+让程序开机器启动
+1)chkconfig(/etc/init.d/sshd)
+2)***** 放入/etc/rc.local
+
+/etc/profile.d 登录后执行的脚本
+/etc/motd 登录后显示的字符串
+
+开机过程:
+1.开机bios自检
+2.MBR引导
+3.grup引导菜单
+4.加载内核kernel
+5.加载init进程
+6.读取inittab文件，执行rc.sysinit.rc等脚本
+7.启动mingetty,进入系统登录界面
+
+答应内容并显示行号: 
+cat -n  test.txt
+nl test.txt
+vi test.txt :set num
+grep -n '.' test.txt  对匹配的结果显示行号
+awk '{print NR $0}' test.txt
+sed '=' test.txt
+
+
+chkconfig:
+chkconfig --level 35 sshd on 
+
+#! /bin/sh
+# chkconfig: 35 56 24
+# description: hhf test
+echo "test"
+
+
+tar -zxvf解压
+-zcvf 压缩
+--exclude 排除不要打包的文件
+tar -zxcf test.tar.gz test --exclude='1.txt'
+
+
+
+cut 切割 常用于简单取列 -d 指定分隔符 -f 数字:取第几列 -f3,6
+         -c 按字符取
+
+cut -c 5-10,20- 2.txt 
+
+
+文件删除控制的变量:
+i_link 文件的硬链接数量
+i_count 引用计数(有一个程序使用i_count+1)
+
+文件删除的原理:
+i_link=0 i_count=0
+
+1、被进程占用的文件能不能删除? 能
+2、如何查看文件是否被进程占用，或查看i_count
+3、如何找回没有连接指向但是被进程占用的文件
+lsof | grep delete
+
+
+sed 取ip地址:
+eth0      Link encap:Ethernet  HWaddr 00:0C:29:FF:95:79  
+          inet addr:192.168.192.132  Bcast:192.168.192.255  Mask:255.255.255.0
+          inet6 addr: fe80::20c:29ff:feff:9579/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:24903 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:17548 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:3715485 (3.5 MiB)  TX bytes:7220697 (6.8 MiB)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:16 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:16 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:840 (840.0 b)  TX bytes:840 (840.0 b)
+
+ifconfig|sed -n '2p'|sed -r 's/^.*addr://g'|sed -r 's/Bc.*$//g'
+ifconfig|sed -n '2p'|sed -r 's/^.*dr:(.*)  Bc.*$/\1/g'
+ifconfig|sed -nr '2s/^.*dr:(.*)  Bc.*$/\1/gp'
+
+tr 替换:
+tr rwx- 4210
+
+
+date +%F\ %T 精确到秒
+
+解析命令:``或$()
+tar zcvf log-`date+%F`.tar.gz /etc/log
+
+
+crond:
+    定时任务。是一个守护进程
+crontab 
+  -l 列出定时任务 == cat /var/spool/cron/root
+  -e 编辑定时任务 == vi /var/spool/cron/root
+  */5 * * * * /usr/sbin/ntpdate time.nist.gov > /dev/null 2>&1  每5分钟更新
+  第一段: 分，取值 00-59
+  第二段: 小时,00-23
+  第三段: 日, 00-31
+  第四段: 月, 01-12
+  第五段: 周, 0-7 0和7都代表周日
+  分时日月周
+  特殊符号:
+    * 表示任意时间，实际就是每的意思 例如 00 23 * * * cmd 表示每日23:00执行cmd任务。
+    - 表示一个时间段，例如 00 17-19 * * * cmd 代表每天17-19点执行cmd 。 分 0-59/5 == *  
+    ， 表示分隔时段的意思。30 17,18,19 * * * cmd 倒是17:30 18:30 19:30 执行cmd 另外","也可以和"-"结合使用,例如30 3-5,17-19 * * * cmd
+    /n n代表数字,即"每隔n单位时间",例如: */5 * * * * cmd 代表每隔5分钟执行cmd 也可写成 0-59/5 * * * * cmd
+    小节:
+        1、定时任务必要时要加注释
+        2、定时任务一定要绝对路径
+        3、crond服务必须要开启
+        4、执行shell脚本加 /bin/sh
+        5、定时任务或脚本结尾加 >/dev/null 2>&1
+        6、生产任务程序不要随意打印输出信息
+            tar zcf    echo 123 >a.log
+        7、定时任务执行的脚本要规范路径(/server/scripts)
+        8、配置定时任务规范操作过程
+        9、确保命令行执行正确。然后复制到脚本
+        10、打包频率执行是分，包名也必须精确到分
+        11、时间变量问题用反斜线\%转义，最好用脚本
+
+
+wc: 
+  用来打印文件的文本行数、单词数、字节数等.
+  参数：-c, --bytes[喝小酒的网摘]http://blog.hehehehehe.cn/a/17301.htm
+  打印字节数（print the byte counts）
+
+  参数：-m, --chars
+  打印字符数（print the character counts）
+
+  参数：-l, --lines
+  打印行数（print the newline counts）
+
+  参数：-L, --max-line-length
+  打印最长行的长度（print the length of the longest line）
+
+  参数：-w, --words
+  打印单词数（print the word counts）
+  wc /etc/passwd
+  输出: 36   55 1721 /etc/passwd
+        行数 单词数 字节数 文件名 
+
+
+1、以下端口对应的服务:
+    21:ftp
+    22:ssh
+    25:smtp
+    3306:mysql
+    873:rsync
+    161:snmp
+    111: rpcbind
+    3389:远程桌面
+    80: http
+    443: https
+    110: pop
+    53: dns
+    514: rsyslog
+
+
+raname 
+rename from to files...
+示例:
+rename "jpg" "html" *.jpg
+
+
+
+centos 添加 epel和 remi 源
+64位:
+rpm -ivh http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+32位:
+rpm -ivh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+导入 key:
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+##添加 remi 源
+rpm -ivh http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+
+wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/rpel-6.repo
+
+
+rpm包制作与rpm仓库搭建: 
+http://edu.51cto.com/lesson/id-70881.html
+
+
+配置虚拟ip:
+ip addr add 192.168.58.139/24 dev eth1
+
+
+
+
+No route to host 防火墙
+content  refuse 防火墙，端口没开
+commond not found 
+no such file or directory
+access denied 权限或selinux
+permission denied 权限或selinux
+
+
+dirname 文件路径
+basename 文件名字
+
+linux字体颜色:
+  echo -e "\033[30m 黑色\033[0m"
+  echo -e "\033[31m 红色\033[0m"
+  echo -e "\033[32m 绿色\033[0m"
+  echo -e "\033[33m 黄色\033[0m"
+  echo -e "\033[34m 蓝色\033[0m"
+  echo -e "\033[35m 紫色\033[0m"
+  echo -e "\033[36m 天蓝色\033[0m"
+  echo -e "\033[37m 白色\033[0m"
+
+  echo -e "\033[40;37m 黑底白字 \033[0m"
+  echo -e "\033[41;37m 红底白字 \033[0m" 
+  echo -e "\033[42;37m 绿底白字 \033[0m" 
+  echo -e "\033[43;37m 黄底白字 \033[0m" 
+  echo -e "\033[44;37m 蓝底白字 \033[0m" 
+  echo -e "\033[45;37m 紫底白字 \033[0m" 
+  echo -e "\033[46;37m 天蓝底白字 \033[0m" 
+  echo -e "\033[47;30m 白底黑字 \033[0m"
+  最后面控制选项说明:
+    \33[0m 关闭所有属性 
+    \33[1m 设置高亮度 
+    \33[4m 下划线 
+    \33[5m 闪烁 
+    \33[7m 反显 
+    \33[8m 消隐 
+    \33[30m — \33[37m 设置前景色 
+    \33[40m — \33[47m 设置背景色 
+    \33[nA 光标上移n行 
+    \33[nB 光标下移n行 
+    \33[nC 光标右移n行 
+    \33[nD 光标左移n行 
+    \33[y;xH设置光标位置 
+    \33[2J 清屏 
+    \33[K 清除从光标到行尾的内容 
+    \33[s 保存光标位置 
+    \33[u 恢复光标位置 
+    \33[?25l 隐藏光标 
+    \33[?25h 显示光标
+
+uptime:
+19:20:15 up 1 day, 11:56,  1 user,  load average: 0.00, 0.00, 0.00
+当前时间 19:20:15
+系统已运行的时间 1 day, 11:56
+当前在线用户  user
+平均负载：0.00, 0.00, 0.00，最近1分钟、5分钟、15分钟系统的负载
+
+centos修改时区:
+时区的信息存在/usr/share/zoneinfo/下面，本机的时区信息存在/etc/localtime
+cp -f /usr/share/zoneinfo/Asia/Shanghai     /etc/localtime
+
+进程管理相关命令:
+bg:后台运行  fg:挂起程序 jobs:显示后台程序  kill,pkill,killall:杀进程
+crontab 设置定时 ps: 查看进程 pstree 查看进程状态树
+top 显示进程  nice 改变优先权  nohup:用户退出系统后继续工作
+pgrep 查找匹配条件的进程  strace 跟踪一个进程的系统调用
+ltrace 跟踪进程调用函数库的情况  vmstat 报告虚拟内存统计信息
+Linux 技巧：让进程在后台可靠运行的几种方法: https://www.ibm.com/developerworks/cn/linux/l-cn-nohup/
+
+ctrl+c 中断执行
+ctrl+z 暂停执行
+bg 把当前脚本或任务放到后台执行
+fg 当前脚本或任务拿到 前台执行,如果有多个任务。可以f+任务编号调出，如fg 1
+jobs 查看执行的脚本或任务
+执行过程:
+nohup  test.sh &
+
+md5sum
+  md5sum file  给file加md5
+  dc5d1108f96b19df3c48598c0dcfd4ae  test.txt
+  -c, --check             检查文件的md5值是否变化。
+  示例:
+  find /root/scripts/ -type f | xargs md5sum > ~/scripts.md5db
+  md5sum -c ~/scripts.md5db 
+    /root/scripts/read_0.sh: OK
+    /root/scripts/judgedb.sh: OK
+    /root/scripts/while-1.sh: OK
+    /root/scripts/read_02.sh: OK
+    /root/scripts/mem_check.sh: OK
+    /root/scripts/rsync.sh: OK
+    /root/scripts/fruit.sh: OK
+    /root/scripts/for-2.sh: OK
+    /root/scripts/for-1.sh: OK
+    /root/scripts/if_0.sh: OK
+    /root/scripts/while-log.sh: OK
+    /root/scripts/get_os_info.sh: OK
+    /root/scripts/color-3.sh: OK
+    /root/scripts/color-2.sh: OK
+    /root/scripts/color.sh: OK
+    /root/scripts/ifconfig_ip.sh: OK
+  md5sum -c ~/scripts.md5db | grep FAILED
+
+netstat -lntup |grep "..." 搜索端口，进程。。。
+ss  -lntup |grep "..."   centos没有netstat,有ss

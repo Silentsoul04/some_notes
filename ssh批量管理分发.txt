@@ -1,0 +1,16 @@
+SSH是专为远程登录回话和其他网络服务提供的安全性协议，利用SSH协议可以有效防止信息泄露问题。
+默认状态下SSH服务主要有2个功能:1、类似于tennet的连接服务器的功能 2、sftp
+ssh客户端还包含一个scp安全拷贝命令
+rpm -qa openssh openssl
+openssh默认支持1.x 2.x
+优化:
+/etc/ssh/sshd_config
+	port 指定端口
+	PermitRootLogin no
+	PermitEmptyPasswords no
+	UseDNS no
+	GSSAPIAuthentication no
+
+
+ssh-keygen -t rsa
+ssh-copy-id -i ~/.ssh/id_rsa.pub remote-host

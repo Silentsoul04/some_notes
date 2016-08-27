@@ -1,0 +1,127 @@
+inotify:
+inotify是一种强大的，细粒度的、异步的文件系统事件监控机制，linux内核从2.6.13起，加入了inotify支持，通过inotify可以监控文件系统中添加，删除，修改移动等各种事件，利用这个内核接口，第三方软件就可以监控文件系统下文件的各种变化情况，而inotify正是实施这样监控的软件。
+inotify实际是一种事件驱动机智，为应用程序监控文件系统事件提供了实时响应事件的机制，而无需通过cron等的轮询机制来获取事件。cron等机制不仅无法做到实时性，而且消耗大量系统资源。
+
+wget https://github.com/downloads/rvoicilas/inotify-tools/inotify-tools-3.14.tar.gz
+tar zxvf v3.14.tar.gz
+cd inotify-tools-3.14/
+./configure --prefix=/usr/local/inotify-tools-3.14 
+make && make install
+echo $? 返回0表示没问题
+ln -s /usr/local/inotify-tools-3.14  /usr/local/inotify
+
+[root@nfs-server inotify-tools]# tree 
+.
+├── bin
+│   ├── inotifywait   ----- 最重要的内容，守护进程工具，在被监控文件或目录上等待文件系统事件发生
+│   └── inotifywatch  ----- 手机被监控的文件系统使用度统计数据，指文件系统事件次数统计
+├── include
+│   └── inotifytools
+│       ├── inotify.h
+│       ├── inotify-nosys.h
+│       └── inotifytools.h
+├── lib
+│   ├── libinotifytools.a
+│   ├── libinotifytools.la
+│   ├── libinotifytools.so -> libinotifytools.so.0.4.1
+│   ├── libinotifytools.so.0 -> libinotifytools.so.0.4.1
+│   └── libinotifytools.so.0.4.1
+└── share
+    ├── doc
+    │   └── inotify-tools
+    └── man
+        └── man1
+            ├── inotifywait.1
+            └── inotifywatch.1
+/usr/local/inotift/bin/inotifywait --help  帮助查看
+	–fromfile 
+	从文件读取需要监视的文件或排除的文件，一个文件一行，排除的文件以@开头。
+	-m, –monitor
+	接收到一个事情而不退出，无限期地执行。默认的行为是接收到一个事情后立即退出。
+	-d, –daemon
+	跟–monitor一样，除了是在后台运行，需要指定–outfile把事情输出到一个文件。也意味着使用了–syslog。
+	-o, –outfile 
+	输出事情到一个文件而不是标准输出。
+	-s, –syslog
+	输出错误信息到系统日志
+	-r, –recursive
+	监视一个目录下的所有子目录。
+	-q, –quiet
+	指定一次，不会输出详细信息，指定二次，除了致命错误，不会输出任何信息。
+	–exclude 
+	正则匹配需要排除的文件，大小写敏感。
+	–excludei 
+	正则匹配需要排除的文件，忽略大小写。
+	-t , –timeout 
+	设置超时时间，如果为0，则无限期地执行下去。
+	-e , –event 
+	指定监视的事件。
+	-c, –csv
+	输出csv格式。
+	–timefmt 
+	指定时间格式，用于–format选项中的%T格式。
+	–format 
+	指定输出格式。
+/usr/local/inotift/bin/inotifywatch --help
+	-v, –verbose
+	输出详细信息
+	@
+	排除不需要监视的文件，可以是相对路径，也可以是绝对路径。
+	–fromfile 
+	从文件读取需要监视的文件或排除的文件，一个文件一行，排除的文件以@开头。
+	-z, –zero
+	输出表格的行和列，即使元素为空
+	–exclude 
+	正则匹配需要排除的文件，大小写敏感。
+	–excludei 
+	正则匹配需要排除的文件，忽略大小写。
+	-r, –recursive
+	监视一个目录下的所有子目录。
+	-t , –timeout 
+	设置超时时间
+	-e , –event 
+	只监听指定的事件。
+	-a , –ascending 
+	以指定事件升序排列。
+	-d , –descending 
+	以指定事件降序排列。
+
+示例:
+ /usr/local/inotify-tools/bin/inotifywait -mrq --timefmt '%d/%m/%y %H:%M' --format '%T %w%f' -e create /data
+
+#! /bin/sh
+inotify=/usr/local/inotify-tools/bin/inotifywait
+$inotify -mrq --format '%w%f' -e create,close_write,delete /data \
+|while read file
+do
+    cd /data/ &&
+    rsync -az ./ --delete rsync_backup@192.168.58.139::backup/  \
+    --password-file=/etc/rsync.password
+done
+
+
+/bin/sh /servers/scripts/backup.sh &
+将sh脚本放到后台执行: 后面加&
+
+
+优化 :
+/proc/sys/fs/inotify目录下有三个文件，对inotify机制有一定的限制:
+max_user_watchs: 设置inotifywait和inotifywatch命令可以见识文件的容量(单进程)
+max_user-instances: 设置每个用户可以运行的inotifywait或inotiftwatch命令的进程数
+max_queued_events: 设置inotify实例时间(event队列可容纳的事件数量)
+
+inotify优点：
+	实时数据同步
+缺点:
+	并发如果大于200个文件(10-100k)，数据同步有延迟
+	前面的脚本每次都是全部推送一次，但确实是增量的
+	监控到时间后，调用rsync同步是单进程的，serync多进程同步
+
+	serync功能:1、配置文件 2、真正的守护进程 3、可以对失败文件定时重传 4、第三方HTTP接口 5、默认多进程同步
+
+#! /bin/sh
+inotifywait -mrq --format '%w%f' -e create,close_write,delete /edx/var/log \
+|while read file
+do
+    rsync -az /edx/var/log/  --delete root@130.211.250.250::edxlog  --password-file=/etc/rsync.password
+done

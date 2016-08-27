@@ -1,0 +1,214 @@
+比较两个数大小:
+	#! /bin/sh
+	read -p "please input two number:" a b
+	[ -z "$a" ] || [ -z "$b" ] && {
+	  echo "please input two number again"
+	  exit 1
+	}
+
+	expr $a + 0 &>/dev/null
+	RETVAL1=$?
+	expr $b + 0 &>/dev/null
+	RETVAL2=$?
+	test $RETVAL1 -eq 0 -a  $RETVAL2 -eq 0||{
+	    echo "please input two "num" again"
+	    exit 2
+	}
+	[ $a -lt $b ] &&{
+	echo "$a<$b"
+	exit 0
+	}
+	[ $a -eq $b ] &&{
+	echo "$a=$b"
+	exit 0
+	}
+	[ $a -gt $b ] &&{
+	echo "$a>$b"
+	exit 0
+	}
+read+echo打印菜单:
+	cat <<EOF
+	    1.[install lamp]
+	    2.[install lnmp]
+	    3.[exit]
+	    please input the num you input:
+	EOF
+	   read a
+	}
+
+	menu
+
+
+	[ $a -eq 1 ] &&{
+	  echo "installing lamp..."
+	  sleep 3
+	  echo "lamp is installed"
+	  menu
+	}
+
+	[ $a -eq 2 ]&&{
+	 echo "installing lnmp..."
+	 sleep 3
+	 echo "lnmp is installed"
+	 menu
+	}
+
+	[ $a -eq 3 ]&&{
+	 exit
+	}
+
+
+颜色:
+	#!/bin/sh
+	RED='\E[1;31m'
+	GREEN='\E[1;32m'
+	YELLOW='\E[1;33m'
+	BLUE='\E[1;34m'
+	PINK='\E[1;35m'
+	RES='\E[0m'
+	echo -e "${RED}====red color====${RES}"
+	echo -e "${YELLOW}====yellow color====${RES}"
+	echo -e "${GREEN}====green color====${RES}"
+	echo -e "${BLUE}====bluk color====${RES}"
+	echo -e "${PINK}====pink color====${RES}"
+水果菜单:
+#/bin/sh
+
+RED='\E[1;31m'
+GREEN='\E[1;32m'
+YELLOW='\E[1;33m'
+BLUE='\E[1;34m'
+PINK='\E[1;35m'
+RES='\E[0m'
+
+menu(){
+cat << EOF
+    1. apple
+    2. pear
+    3. banana
+    4. chery
+    5/q. exit
+EOF
+}
+while true
+do
+menu
+read -p "please input you choose:" fruit
+case "$fruit" in
+  1)
+    echo -e "$RED apple $RES"
+    ;;
+  2)
+    echo -e "$GREEN pear $RES"
+    ;;
+  3)
+    echo -e "$YELLOW banana $RES"
+    ;;
+  4)
+    echo -e "$PINK chery $RES"
+    ;;
+  5|q)
+    exit 0
+    ;;
+  *)
+    echo -e "\033[41;37m no fruit you choose.\033[0m"
+    ;;
+esac
+done
+
+rsync:
+#!/bin/sh
+# rpcbind       Start/Stop rsync
+#
+# chkconfig: 2345 31 54
+# description: rsync
+# by  huanghongfei 2016-8-24
+# QQ 853885165
+#
+. /etc/init.d/functions
+
+pid_file=/var/run/rsyncd.pid
+
+start_rsync(){
+  if [ -s "$pid_file" ] 
+    then
+      echo "rsync is running"
+  else
+      rsync --daemon
+      action "Starting rsync..." /bin/true
+  fi
+}
+
+stop_rsync(){
+  if [ -s $pid_file ]
+    then
+    kill -USR2 $(cat $pid_file)
+    rm -f $pid_file
+    action "Stopping rsync..." /bin/true
+  else
+    echo "rsync is not running!"
+  fi
+}
+
+get_status(){
+  if [ -s "$pid_file" ]
+    then
+      echo "rsync(pid `cat $pid_file`) is running."
+  else
+      echo "rsync is stopped"
+  fi
+}
+
+
+case "$1" in
+  start)
+    start_rsync
+    RETVAL=$? 
+   ;;
+  stop)
+    stop_rsync
+    RETVAL=$?
+    ;;
+  restart)
+    stop_rsync
+    sleep 2
+    start_rsync
+    RETVAL=$?
+    ;;
+  status)
+    get_status
+    ;;
+  *)
+    echo "USAGR:$0 {start|stop|restart}"
+    ;;
+esac
+exit $RETVAL
+
+while循环从1加到100:
+	#!/bin/sh
+	i=1
+	sum=0
+	while [ $i -le 100 ]
+	do
+	  let sum=sum+i
+	  echo $i $sum
+	  let i=i+1
+	done
+同上:
+	#!/bin/sh
+	i=1
+	sum=0
+	while ((i < 101))
+	do
+	  ((sum=sum+i))
+	  echo $i $sum
+	  ((i=i+1))
+	done
+取10位随机数:
+    index=0
+    str=""
+    for i in {a..z}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {A..Z}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {0..9}; do arr[index]=${i}; index=`expr ${index} + 1`; done
+    for i in {1..10}; do str="$str${arr[$RANDOM%$index]}"; done
+    echo ${str}

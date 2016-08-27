@@ -1,0 +1,126 @@
+NFS(network file system):通过网络让两台主机之间共享文件。
+NFS:
+	centos6.6   192.168.58.136 NFS服务端  nfs-server
+	centos6.6   192.168.58.137 NFS客户端  lamp01
+	centos6.6   192.168.58.138 NFS客户端  lamp02
+nfs软件列表:
+	nfs-utils：nfs服务主程序
+	rpcbind: centos6.x下面的RPC的主程序(centos5.x下面叫portmap)
+	NFS可以被视为一个RPC程序，在启动任何一个RPC程序之前。需要做好端口的对应映射工作，这个映射工作就由rpcbind服务来完成。因此，在提供NFS服务之前必须启动rpcbind.
+
+安装nfs(所有主机):
+	yum install nfs-utils rpcbind
+	(三种安装方法:)
+	1、yum install nfs-utils rpcbind
+	2、rpm -ivh 
+	3、yum grouplist|grep -i nfs
+	   yum grouplist "NFS file server"
+启动(nfs-server):
+	/etc/init.d/rpcbind start
+		查看服务:
+		netstat -lntup |grep rpcbind
+		lsof -i :111
+		rpcinfo -p localhost
+	/etc/init.d/nfs start
+	chkconfig nfs on
+	保证rpcbind开机先启动:
+		对比 /etc/init.d/rpcbind与/etc/init.d/nfs中的chkconfig启动顺序
+		# chkconfig: 2345 13 87
+		13是启动顺序
+	生产环境中:
+		一般把服务启动脚本写到 /etc/rc.local 中
+配置nfs服务端:
+	配置文件: 
+	/etc/exports(默认是空的)
+	man exports有example
+	EXAMPLE
+	   # sample /etc/exports file
+	   /               master(rw) trusty(rw,no_root_squash)
+	   /projects       proj*.local.domain(rw)
+	   /usr            *.local.domain(ro) @trusted(rw)
+	   /home/joe       pc001(rw,all_squash,anonuid=150,anongid=100)
+	   /pub            *(ro,insecure,all_squash)
+	   /srv/www        -sync,rw server @trusted @external(ro)
+	   /foo            2001:db8:9:e54::/64(rw) 192.0.2.0/24(rw)
+	   /build          buildhost[0-9].local.domain(rw)
+	第一列:要共享的目录(要存在)  
+	第二列:客户端的地址
+		授权单一客户:10.0.0.30
+		授权整个网段: 10.0.0.0/24 其中24等同于255.255.255.0生产环境中常见。
+		授权整个网段: 10.0.0.* 指定网段的另一种写法
+		授权整个域名客户端: nfs.ichenfei.com
+		授权整个域名客户端: *.ichenfei.com
+	示例:
+	/data    192.168.58.*(rw,sync)
+
+	查看nfs服务端配所有参数配置:
+	cat /var/lib/nfs/etab
+	服务端设置权限:
+	chown -R nfsnobody /data/
+挂载:
+	showmount -e 192.168.58.136
+	[root@nfs-server ~]# mount -t nfs 192.168.58.136:/data /mnt/
+	[root@nfs-server ~]# df -h
+	Filesystem            Size  Used Avail Use% Mounted on
+	/dev/sda2             6.7G  2.6G  3.8G  41% /
+	tmpfs                 491M   84K  491M   1% /dev/shm
+	/dev/sda1             283M   28M  240M  11% /boot
+	192.168.58.136:/data  6.7G  2.6G  3.8G  41% /mnt
+nfc客户端:
+	/etc/init.d/rpcbind start
+	echo "/etc/init.d/rpcbind start" >>/etc/rc.local
+		showmount -e 192.168.58.136提示
+		clnt_create: RPC: Port mapper failure - Unable to receive: errno 113 (No route to host)
+		一般是防火墙问题,还得关闭selinux
+		service iptables stop
+	设置开机挂载:
+	echo "mount -t nfs 192.168.58.136:/data /data" >> /etc/rc.local 
+NFS服务端参数(exports里面小括号的内容):
+	cat /var/lib/nfs/etab 
+	1、rw读写
+	2、sync 请求写入数据时，数据同步写入到NFS server硬盘
+	3、async 请求或写入数据时，先返回请求，再将数据写入到内存。即异步同步数据。可提升NFS性能，电商秒杀是异步
+	4、no_root_squash 访问NSF Server共享目录的用户如果是root的话,它对改共享目录有root权限
+	5、root_squash  访问NSF Server共享目录的用户如果是root的话,将其权限压缩为匿名用户，同时UID和GID为nfsnobody对应的权限
+	6、all_squash 不管访问NSF Server共享目录的用户是谁,将其权限压缩为匿名用户
+
+	exportfs -rv  == reload 平滑重启
+	/usr/bin/showmount 查看挂载信息
+	/var/lib/nfs/etab  服务器端配置参数
+	/proc/mounts 客户端查看挂载
+NFS客户端mount挂载深入:
+	wsize rsize:读出(wsize)写入(rsize)的区块的大小,可以影响可独断与服务器端传输数据的缓冲存储量，一般来说，如果在局域网内,并且客户端与服务端都有足够大的内存。这个值可以设置大一点，最好是实现网络能够传输的最大值为险，centos6默认wsize rsize都是131072
+	proto=udp 使用UDP协议传输资料，默认是tcp
+	mount -t nfs -o ***
+	安全的挂载:
+	mount -t nfs -o nosuid ,noexec,nodev,rw ip:/data /data
+	禁止更新目录及文件时间戳挂载:
+	mount -t nfs -o noatime,nodiratime  ip:/data /data
+	默认:
+	mount -t nfs ip:/data /data
+NFS内核相关优化:
+	cat >> /etc/sysctl.conf<<EOF
+	net.core.wmem_default=8388608
+	net.core.rmem_default=8388608
+	net.core.rmem_max=16777216
+	net.core.wmem_max=16777216
+	EOF
+	sysctl -p
+
+NFS优缺点:
+	优点:
+	1、简单，容易上手，容易掌握
+	2、NFS文件系统内数据是在文件系统之上的，即数据是看得见的
+	3、方便 部署快速，维护简单，可控
+	4、可靠 数据可靠性高，经久耐用
+	5、稳定
+	局限
+	1、存在单点故障，如果nfs server宕机了所有客户端都不能访问共享目录，这个可以通过负载均衡及高可用方案弥补
+	2、在大数据高并发的场合,NFS效率/性能有限(一般几千万PV一下的网站不算瓶颈，除非架构太差)
+	3、客户端认证时基于ip和主机名，权限时根据ID识别，安全性一般
+	4、NFS数据是明文的，NFS本身对数据完整性不作验证
+	5、多台客户机挂载一个NFS服务器时，连接管理维护麻烦(耦合性高)
+
+
+开机挂载:
+echo "192.168.58.136:/data    /mnt    nfs    defaults    0 0">>/etc/fstab 

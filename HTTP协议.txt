@@ -1,0 +1,64 @@
+HTTP状态码:
+100-199 表示指定客户端应响应的某些动作
+200-299 表示请求成功
+300-399 表示已经移动的文件并且长被包含在定位头信息中指定新的地址信息
+400-499 用于指定客户端的错误
+500-599 用于指定服务器错误
+
+200 OK 服务器成功返回网页，这是成功的http请求，返回的标准状态码
+301 Moved Permanently 永久跳转
+403 Forbidden 禁止访问，这个请求是合法的，但是服务器端因为匹配了预先设置的规则而拒绝响应客户端的请，一般都是权限配置不当
+404 Not Found 服务器找不到客户端请求的页面
+500 Internal Server Error 内部服务器错误，服务器遇到意料不到的情况。不能完成客户请求，一般为服务器或者内部程序问题所致
+502 Bad Gateway 坏的网关，一般是代理服务器请求后端服务时，后端服务不可用或者没有完成响应网关服务器，一般为代理服务器下面的节点问题
+503 Service Unavailable 服务当前不可用，可能因为服务器超载或者停机维护或是代理服务器后面没有可以提供服务的节点
+504 Gateway Timeout 网关超时，一般是网关服务器请求后端服务时，后端服务没有砸特定时间完成处理请求，一般是服务器过载没有在指定时间返回数据给代理服务器
+
+HTTP响应报文:
+
+起始行: 
+	协议及版本号 数字状态码 状态信息
+	HTTP/1.1 200 OK
+响应头部: 
+	字段1: 值1
+	字段2: 值2
+空行
+响应报文主体:
+	<html><body><title></title></body></html>
+
+curl -I www.taobao.com
+
+HTTP/1.1 302 Found 
+Server: Tengine   
+Date: Mon, 15 Aug 2016 04:16:19 GMT
+Content-Type: text/html
+Content-Length: 258
+Connection: keep-alive
+Location: https://www.taobao.com/
+Set-Cookie: thw=cn; Path=/; Domain=.taobao.com; Expires=Tue, 15-Aug-17 04:16:19 GMT;
+Strict-Transport-Security: max-age=31536000
+
+
+HTTP协议原理:
+HTTP协议属于OSI模型第七层应用层协议，HTTP协议的重要应用就是WWW服务应用。
+HTTP协议进行通信时，需要有客户端即终端用于，和服务端即web服务器，当web服务器向web服务器发送请求报文之前，先要通过TCP/IP协议在web客户端和服务器之间建立一个TCP/IP连接，整个HTTP协议工作流程原理步骤如下:
+1.终端用于在web浏览器地址栏输入访问地址http://www.baidu.com/index.html
+2.web服务器请求DNS服务器把域名www.baidu.com转换成web服务器ip地址，此处解析就是DNS解析原理流程
+3.web浏览器将端口号(默认80)从访问地址(URL)解析出来
+4.web服务器通过解析到的ip地址及端口号与web服务器之间建立一条tcp连接
+5.建立tcp连接后，web浏览器向web服务器发送一条HTTP响应报文
+6.web服务器响应并读取浏览器的请求信息，并返回一条HTTP响应报文
+7.web服务器关闭http连接，关闭tcp连接，web浏览器显示访问的网站内容到屏幕
+整个通信原理知识点有:
+1、用户访问网站的流程
+2、DNS解析流程细节
+3、建立TCP连接后发送HTTP报文的过程
+http权威指南,tcp/ip协议卷一
+
+
+www服务时http功能之一
+www功能默认端口80，0SI第七层协议 
+实现www的常用web软件:nginx apache等
+经典web组合:
+l(n/e)mp(linux nginx mysql php)
+lamp(linux apache mysql php)

@@ -1,0 +1,121 @@
+dict：
+	查找和插入速度极快，不会随着key的增加而增加
+	需要占用大量内存，内存浪费多
+	KEY不可变
+	默认无序
+list:
+	查找和插入的时间随着元素的增加而增加
+	占用空间少，浪费内存很少
+	通过下标查询
+	有序
+tuple: 
+	与list可以互换。不可以增删改
+
+SET集合:
+	特点:无序，不重复
+	功能:关系测试，去重
+	set1 = {1,2,3,4}
+	set(list)
+	x = {1,2,3,4} y={3,4,5,6}
+	集合运算:
+	x&y合集 x|y并集 x-y差集 x^y反差集
+	x.issubset(y) a是b的子集
+	x.issuperset(y) a是否包含b
+
+yield:
+
+三元表达式:
+result = 3 if 1>3 else  4
+
+lambda：匿名函数。
+	lanbda x,y:x+y
+map:
+	>>> map(lambda x:x*2,range(10))
+	[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+
+
+内置函数:
+	help():
+		>>> a=[]
+		>>> help(a)
+	dir():
+	vars():
+	type():
+	import temp
+	reload(temp):
+	id()
+	abs()
+	bool()
+	len()
+	max(list)
+	min(list)
+	sum()
+	pow(2,10): 指数
+	chr(): 数字转字符  chr(65)='A' chr(66)='B'
+	ord(): 字符转数字 ord('A')=65
+	hex(): 16进制 hex(2)=0x2
+ 	bin(): 2进制 bin(2)=10
+	oct(): 8进制 oct(2)=02
+	enumerate:为列表添加序列
+		a['a','b','c']
+		for item in enumerate(a):
+			print item[0],item[1]
+	map:  对所有元素进行统一操作
+	filter:  过滤
+		def foo(arg):
+			if arg<10:
+				return True
+			else:
+				return False
+		li = [8,9,11,22]
+		filter(foo,li)
+	reduce():累加，累乘==   必须有2个参数
+		li = [11,22,33]
+		print reduce(lambda x,y:x+y,li)    66
+	zip:
+	    x = [1,2,3]
+	    y = [4,5,6,10]
+	    z = [7,8,9]
+	    zip(x,y,z)=[(1, 4, 7), (2, 5, 8), (3, 6, 9)]
+
+
+socket 是建立在tcp/ip基础上的协议。
+socket 通常也称作“套接字”，用于描述ip地址和端口，是一个通信链的句柄。应用程序通常通过“套接字”向网络发送请求或者应答网络请求。
+说白了就是一种通信机制。它类似于银行，电信等部门的电话客服部门。你打电话的时候那边会配置一个人回答你的问题，客服部门就相当于socket的服务端。
+你这边就相当于客户端，在和你通话结束前，如果有人想找在和你通话的那个人说话，是不可能的，因为你在和他通信，当然客服部门的电话交换机也不会重复分配
+
+socket起源于UNIX.而UNIX/LINUX基本哲学就是“一些皆文件”，都可以用“打开open-读写write/read-关闭close”模式来操作。socket就是该模式的一个实现，
+socket即是一种特殊的文件，一些socket函数就是对齐的操作(读写IO，打开，关闭)
+socket服务器编程步骤:
+1.打开socket
+2.绑定到哦一个地址和端口
+3.帧听进来的连接
+4.接受连接
+5.读写数据
+
+
+套接字的示例具有以下方法:
+1、 s.bind(address) 将套接字绑定到地址。address地址的格式取决于地址族。在AF_INET下，以元组(host,port)的形式表示地址。
+2、 s.listen(backlog) 开始监听传入连接。backlog 指定在拒绝连接前操作习题可以挂起的最大连接数量。
+3、 s.connect(address) 连接到address字的套接字。一般，address格式为元组(hostname,port),如果连接同一台机器上的服务器，可以将hostname设置为localhost,如果连接出错，返回socket.error错误。
+4、 s.connect_ex(address) 功能与connect(address)相同，但是成功返回0，失败返回error的值。
+5、 s.accept() 接受连接并返回(conn,address)，其中conn是新的套接字对象，可以用来接受和发送数据。address是连接客户端的地址。
+6、s.close() 关闭套接字
+7、s.fileno() 返回套接字的文件描述符。
+8、s.getpeername() 返回套接字自己的地址。通常是一个元组(ipaddr,port)
+9、s.getsockname() 返回套接字自己的地址。通常是一个元组(ipaddr,port)
+10、s.getsockopt(level,optname[.buflen]) 返回套接字选项的值
+11、s.gettimeout() 返回当前超时期的值，单位是秒，如果没有设置超时期，则返回None
+12、s.recv(bufsize[,flag]) 接受套接字的数据。数据以字符串形式返回，bufsize是要接受的最大数据量。flag提供有关消息的其他信息，通常可以忽略，
+13、s.recvfrom(bufsize[.flag]) 与recv()类似，凡是返回值是(data,address).其中data是包含接收数据的字符串，address是发送数据的套接字地址。
+
+14、s.send(string[,flag]) 将string中的数据发送到连接的套接字。返回值是要发送的字节数量,成功返回None，失败抛出异常
+
+15、s.sendall(string[,flag]) 将string中的数据发送到套接字，凡在返回前会尝试发送所有数据，成功返回None，失败抛出异常
+16、s.sendto(string[.flag],address) 将数据发送到套接字,address是行为(ipaddr,port)的元组，指定远程地址。返回是发送的字节数，该函数主要用于UDP协议。
+17、s.sendblocking(flag) 如果flag为0，则将套接字设置为非阻塞模式，否者套接字设置为阻塞模式(默认值)。非阻塞模式下，如果调用recv()没有发现任何数据，将send()调用无法立即发送数据，将引起socket.error异常
+18、s.setskckopt(level,optname,value) 设置套接字选项的值
+19、s.settimeout(timeout) 设置套接字操作的超时期，timeout是一个浮点数，但是为秒 。值为None表示没有超时期。一般，超时期应该在刚创建套接字的时候设置，因为他们可能是用于连接的操作。
+
+普通非套接字函数:
+

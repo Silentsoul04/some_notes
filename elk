@@ -1,0 +1,135 @@
+yum install java-1.8.0-openjdk java-1.8.0-openjdk-devel -y
+curl -L -O https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.5.tar.gz
+curl -L -O https://github.com/elastic/logstash/archive/v1.5.6.tar.gz
+curl -L -O https://github.com/elastic/kibana/archive/v4.1.10.tar.gz
+curl -L -O http://download.redis.io/releases/redis-3.0.7.tar.gz
+
+elasticsearch:
+	1.索引
+	2.文档
+	3.分片
+	4.备份分片
+	5.节点
+	6.集群
+ 
+elasticsearch-servicewrapper :
+git clone https://github.com/elastic/elasticsearch-servicewrapper 
+mv elasticsearch-servicewrapper/service  bin
+cd bin/service
+./elasticsearch install
+
+与elasticsearch交互:
+curl -X<VERB> 'PROTOCOL://<HOST>/<PATH>?<QUERY_STRING>' -d <BODY>
+	VERB HTTP方法:GET POST PUT HEAD DELETE
+	PROTOCOL http或者https协议
+	HOST elasticsearch集群中的任何一个节点的主机名，如果是本地节点就叫localhost
+	QUERY_STRING 一些可选的请求参数，例如?pretty参数将使请求返回更加美观的json数据
+	BODY 一个JSON格式的请求主体
+[root@elk-2 service]#  curl -XGET 'http://127.0.0.1:9200/_count?pretty' -d '
+> {
+>     "qurey":{
+>         "match_all"{}
+>     }
+> }
+> '
+{
+  "count" : 0,
+  "_shards" : {
+    "total" : 0,
+    "successful" : 0,
+    "failed" : 0
+  }
+}
+
+安装插件:
+/elk/elasticsearch/bin/plugin -i elasticsearch/marvel/latest
+/elk/elasticsearch/bin/plugin -i mobz/elasticsearch-head
+/elk/elasticsearch/bin/plugin -i lukas-vlcek/bigdesk/2.5.0
+
+marvel:
+http://104.199.195.229:9200/_plugin/marvel
+	dashbord-->sense
+	使用:
+	POST GET PUT ……
+示例:
+POST /index-demo/test      
+{                        
+  "user":"huanghongfei", 
+  "mesg":"helloworld"    
+} 						 
+======>
+{
+   "_index": "index-demo",
+   "_type": "test",
+   "_id": "AVaRzyJ4PfIcIGfJZgQj",
+   "_version": 1,
+   "created": true
+}
+
+GET /index-demo/test/AVaRzyJ4PfIcIGfJZgQj
+=====>
+{
+   "_index": "index-demo",
+   "_type": "test",
+   "_id": "AVaRzyJ4PfIcIGfJZgQj",
+   "_version": 1,
+   "found": true,
+   "_source": {
+      "user": "huanghongfei",
+      "mesg": "helloworld"
+   }
+}
+
+搜索:
+GET /index-demo/test/_search?q=helloworld
+=====>
+{
+   "took": 4,
+   "timed_out": false,
+   "_shards": {
+      "total": 5,
+      "successful": 5,
+      "failed": 0
+   },
+   "hits": {
+      "total": 1,
+      "max_score": 0.19178301,
+      "hits": [
+         {
+            "_index": "index-demo",
+            "_type": "test",
+            "_id": "AVaRzyJ4PfIcIGfJZgQj",
+            "_score": 0.19178301,
+            "_source": {
+               "user": "huanghongfei",
+               "mesg": "helloworld"
+            }
+         }
+      ]
+   }
+}
+
+
+安装logstash
+rpm --import https://packages.elasticsearch.org/GPG-KEY-elasticsearch
+cat > /etc/yum.repos.d/logstash.repo <<EOF
+[logstash-1.5]
+name=Logstash repository for 1.5.x packages
+baseurl=http://packages.elasticsearch.org/logstash/1.5/centos
+gpgcheck=1
+gpgkey=http://packages.elasticsearch.org/GPG-KEY-elasticsearch
+enabled=1
+EOF
+yum install logstash
+
+测试
+ /opt/logstash/bin/logstash -e "input{stdin{}} output{stdout{}}"
+
+
+安装oracle java:
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java8-installer
+java -version
+
+
