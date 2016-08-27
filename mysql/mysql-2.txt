@@ -645,3 +645,6 @@ character-set-server=utf8  5.1使用default-set-server=utf8
 no-auto-rehash
 default-character-set=utf8
 
+
+show processlist;   查看数据库连接情况
+show global status;  查看mysql状态

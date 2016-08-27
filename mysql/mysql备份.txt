@@ -2,11 +2,26 @@ mysqldump
 语法:
 mysqldump -uroot -ppassword 数据库名 > 文件名.sql
 常用参数:
+http://www.linuxidc.com/Linux/2014-04/99673.htm
 --help 查看帮助
 -A 导出所有数据库 --all-databases  
 -B 导出包括(create datebase;use database)等语句,也可用于导出几个数据库。参数后面所有名字参量都被看作数据库名。--databases
 --compact  导出更少的输出信息(用于调试)。去掉注释和头尾等结构。可以使用选项：--skip-add-drop-table --skip-add-locks --skip-comments --skip-disable-keys
--E 
+-E --events 显示时间
+-d 只备份表结构
+-t 只备份数据
+-F 刷新binlog参数
+-X --xml 导出XML格式.
+--lock-all-tables, -x  提交请求锁定所有数据库中的所有表，以保证数据的一致性。这是一个全局读锁，并且自动关闭--single-transaction 和--lock-tables 选项。
+--master-data 增加binlog日志文件名及对应的位置点，如果为1，将会输出CHANGE MASTER 命令；如果为2，输出的CHANGE MASTER命令前添加注释信息。该选项将打开--lock-all-tables 选项
+--single-transaction 适合innodb事物数据库备份;innodb表在备份时，通常启动--single-transaction来保证备份的一致性，实际上它的工作原理是设定本次会话的隔离级别为:refeatable read,以确保本次会话(dump)时，不会看到其他会话已经提交了的数据 。
+
+myisam备份命令:
+mysqldump -uroot -p123456 -A -B --master-data=2 -x|gzip>/opt/all.sql.gz
+innodb备份命令(推荐):
+mysqldump -uroot -p123456 -A -B --master-data=2 --single-transaction|gzip >/opt/all.sql.gz
+
+
 指定压缩示例: 
 mysqldump -uroot -ppassword -B hhf|gzip hhf_bak.sql.gz
 解压:
@@ -16,10 +31,18 @@ mysqldump工作原理:mysqldump备份实际就是把数据从mysql库里以逻�
 
 总结:
 1、备份库要加-B参数
-2、
+2、压缩用gzip
+
+分库备份示例:
+mysql -uroot -p123456 -e "show databases;"|grep -Evi "database|infor|perfor"|sed -r 's#^([a-z].*$)#mysqldump -u root -p123456 --events -B \1|gzip > /opt/\1.sql.gz#g'|bash
+
+备份表:
+myqsl -uroot -p123456 数据库名 表1 表2 > test.sql ===>不加-B默认前面是库，后面是表
 
 恢复:
 mysql -uroot -p123456 <  /opt/hhf.sql
+
+
 
 
 
