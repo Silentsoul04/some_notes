@@ -11,7 +11,8 @@ mysql主从同步
 
 ### linux运维场景数据同步方案
 ##### 文件级别同步方案:
-scp,nfs,sftp,http,samba,**rsync**,csync2,union
+
+    scp,nfs,sftp,http,samba,**rsync**,csync2,union
 
 ##### 文件系统级别同步：
 * drbd(基于文件系统同步网络raid1),同步几乎任何业务数据
@@ -106,3 +107,12 @@ start slave;
 * 8.根据从库的show master status 查看binlog的位置状态，在从库执行change master to...语句
 * 9.从库开启同步开关,start slave
 * 10.从库show slave status\G，检查同步状态，并在主库进行更新测试。
+
+####mysql主从复制原理要点
+* 异步同步方式
+* 逻辑同步模式,多种模式，默认通过SQL语句执行
+* 主库通过记录binlog实现对库的同步。binlog记录数据库的更新语句
+* 主库1个IO线程，从库由1个IO线程和一个SQL线程来完成的
+* 从库关键文件master.info,relay-log,relay-info功能。
+* 如果从库还想级联从库，需要打开log-bin和log-slave-updates参数
+

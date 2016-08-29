@@ -44,6 +44,28 @@ mysql -uroot -p123456 <  /opt/hhf.sql
 
 
 
+全量备份与增量备份:
+  全量备份:把数据库中的所有数据进行备份。
+  增量备份:从上次全量备份之后，更新的新数据，对于mysql来说，binlog日志就是mysql的增量备份。
+
+mysql的mysqldump备份什么时候派上用场？
+  1、迁移或升级数据库时
+  2、增加从库时
+  3、因为硬件或特殊异常情况，主库或从库宕机，主从可以相互切换，无需备份
+  4、认为的ddl,dml语句，主从库没办法了，所有库都会支持。此时需要备份
+  5、扩机房灾备，需要备份到异地
+
+什么时候需要增量恢复:
+  一般由认为(或程序)逻辑的方式在数据库执行的sql语句等误操作，才需要增量恢复，因为此时所有从库也执行来了相同的误操作语句。
+
+mysql增量恢复必备条件：
+  mysql数据库开启了log-bin参数记录binlog日志功能
+  主库和从库都要开启binlog记录功能
+  小结: 存在一份全备加上全被之后的时刻到出问题时刻的所有增量binlog文件备份。
+
+
+
+
 
 
 
@@ -367,3 +389,5 @@ verbose                           FALSE
 where                             (No default value)
 plugin-dir                        (No default value)
 default-auth                      (No default value)
+
+
