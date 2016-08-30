@@ -650,41 +650,17 @@ show processlist;   查看数据库连接情况
 show global status;  查看mysql状态
 
 
-mysql binlog:
-mysql的binlog日志作用是什么?
-用来记录mysql内部的增删改对mysql数据库有更新的内容的记录 像 show select不修改就不会记录。
-开启binlog:
-vi /etc/my.cnf
-在[mysqld]字段添加或打开:
-log-bin=mysql-bin
-
-binlog详解:  http://www.cnblogs.com/martinzhang/p/3454358.html
-常用binlog日志操作命令
-    1.查看所有binlog日志列表
-      mysql> show master logs;
-    2.查看master状态，即最后(最新)一个binlog日志的编号名称，及其最后一个操作事件pos结束点(Position)值
-      mysql> show master status;
-    3.刷新log日志，自此刻开始产生一个新编号的binlog日志文件
-      mysql> flush logs;
-      注：每当mysqld服务重启时，会自动执行此命令，刷新binlog日志；在mysqldump备份数据时加 -F 选项也会刷新binlog日志；
-    4.重置(清空)所有binlog日志
-      mysql> reset master;
-
-查看某个binlog日志内容，常用有两种方式：
-
-    1.使用mysqlbinlog自带查看命令法：
-      注: binlog是二进制文件，普通文件查看器cat more vi等都无法打开，必须使用自带的 mysqlbinlog 命令查看
-          binlog日志与数据库文件在同目录中(我的环境配置安装是选择在/usr/local/mysql/data中)
-      在MySQL5.5以下版本使用mysqlbinlog命令时如果报错，就加上 “--no-defaults”选项
-    2.上面这种办法读取出binlog日志的全文内容较多，不容易分辨查看pos点信息，这里介绍一种更为方便的查询命令：
-
-      mysql> show binlog events [IN 'log_name'] [FROM pos] [LIMIT [offset,] row_count];
-
-             选项解析：
-               IN 'log_name'   指定要查询的binlog文件名(不指定就是第一个binlog文件)
-               FROM pos        指定从哪个pos起始点开始查起(不指定就是从整个文件首个pos点开始算)
-               LIMIT [offset,] 偏移量(不指定就是0)
-               row_count       查询总条数(不指定就是所有行)
-
-
-
+mysql日志:
+错误日志(error log):记录mysql服务进程mysqld在启动/关闭过程中遇到的错误信息。
+	my.cnf:
+	[mysql_safe]
+	log-error=...
+查询日志(query log):
+	普通查询日志(general query log):记录客户端连接信息和执行的SQL语句信息。
+	show variables like 'grneral_log%';
+	慢查询日志(slow query log):记录执行时间超过指定值(log_query_time)的SQL语句
+	log_query_time = 1
+	log-slow-queries = /data/3306/slow.log
+	log_queries_not_using_indexes
+二进制日志(binary log):记录数据被修改的相关信息
+	show variables like '%log-bin%';
