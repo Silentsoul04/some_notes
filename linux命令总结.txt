@@ -517,3 +517,6 @@ md5sum
 
 netstat -lntup |grep "..." 搜索端口，进程。。。
 ss  -lntup |grep "..."   centos没有netstat,有ss
+
+
+netstat -tun|grep 521|sort 查看521端口的连接数
