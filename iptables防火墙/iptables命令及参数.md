@@ -14,9 +14,12 @@ iptables：
     -I 添加规则到指定链的第一条 
     -D 删除规则
     -p 指定协议 --proto  (tcp,udp,icmp)
+    -i 指定接收数据包的网卡 --in-interface  (-i eth0)
+    -o 指定发送数据包的网卡  --out-interface
     -j 指定行为 --jump (ACCEPT(接受) DROP(丢弃) REJECT(拒绝))
     -s 指定来源地址 --source
     -d 指定目标地址  --destination
+    -m 匹配 --match
     --dport 指定目的端口 --destination-port
     --sport 指定源端口   --source-port
     --line-numbers 给规则加上序号
@@ -74,6 +77,38 @@ iptables -t filter -I INPUT  -p tcp -s 49.223.186.170 --dport 80 -j DROP
 
 ```
 
+
+参考:
+
+[iptables防火墙原理详解](https://segmentfault.com/a/1190000002540601)
+
+
+![命令格式](_images/防火墙命令格式.png)
+
+
+练习:
+```
+iptables -t filter -I INPUT -i eth0 -s 192.168.58.0/24 -j DROP eth0封掉整个网段
+
+iptables -t filter -I INPUT -i eth0 ! -s 192.168.58.1 -j DROP 除了192.168.58.1全封掉
+iptables -t filter -I INPUT -p icmp -j DROP  禁ping
+
+
+匹配端口范围:
+iptables -A INPUT -p tcp --dport 3306:8809 -j ACCEPT  接受3306-8809端口
+iptables -A INPUT -p tcp -m multiport --dport 21,22,23,24,25 -j ACCEPT 接受21,22,23,24,25端口
+
+匹配网络端口:
+iptables -A INPUT -i eth0   --in-interface
+iptables -A FORWARD -o eth0 --out-interface
+
+匹配网络状态(ftp常用):
+-m --state state
+  NEW:已经或将启动新的连接
+  ESTABLISHED:已经建立的连接
+  RELATED:正在启动新连接
+  INVALID:非法或无法识别的连接
+```
 
 
 ```
