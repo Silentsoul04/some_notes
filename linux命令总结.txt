@@ -70,7 +70,8 @@ sed：
 	   sed -i 's#需要替换的内容#替换的内容#g' 文件  
 	   s: 替换 g:global 全局 #分隔符，可用/@等代替
 	   例:sed -i 's#hello#hello1#g' 3.txt 
-
+      sed -n /hehe/p  test.txt 在test.txt中查找hehe
+      sed /hehe/s#^#//#g  test.txt 在包含hehe的行前面加上//
 
 awk 一门语言，过滤内容(取列) 删除 打印
     awk '{print &1}' 文件   打印第一列
@@ -520,3 +521,12 @@ ss  -lntup |grep "..."   centos没有netstat,有ss
 
 
 netstat -tun|grep 521|sort 查看521端口的连接数
+
+
+nmap 192.168.58.138 -p 1-65535  查看服务器开了哪些端口. nmap系统不自带,需要下载.
+
+
+route -n 查看路由网关等信息
+
+
+arp -a 查看arp缓存，mac地址
