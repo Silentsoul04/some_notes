@@ -1,4 +1,4 @@
-iptables：
+#####iptables：
 
     -h 查看帮助 --help
     -V 查看版本 --version
@@ -20,12 +20,13 @@ iptables：
     -s 指定来源地址 --source
     -d 指定目标地址  --destination
     -m 匹配 --match
+    -P 设置某条规则链的默认动作  --policy  (eg: iptables -P INPUT  DROP )
     --dport 指定目的端口 --destination-port
     --sport 指定源端口   --source-port
     --line-numbers 给规则加上序号
 
 
-禁止规则:
+#####禁止规则:
 
 基本的处理行为：ACCEPT(接受) DROP(丢弃) REJECT(拒绝)
 
@@ -78,7 +79,7 @@ iptables -t filter -I INPUT  -p tcp -s 49.223.186.170 --dport 80 -j DROP
 ```
 
 
-参考:
+**参考:**
 
 [iptables防火墙原理详解](https://segmentfault.com/a/1190000002540601)
 
@@ -86,7 +87,7 @@ iptables -t filter -I INPUT  -p tcp -s 49.223.186.170 --dport 80 -j DROP
 ![命令格式](_images/防火墙命令格式.png)
 
 
-练习:
+####练习:
 ```
 iptables -t filter -I INPUT -i eth0 -s 192.168.58.0/24 -j DROP eth0封掉整个网段
 
@@ -110,6 +111,67 @@ iptables -A FORWARD -o eth0 --out-interface
   INVALID:非法或无法识别的连接
 ```
 
+####企业防火墙配置:
+```
+iptables -F
+iptables -X
+iptables -Z    ### 先清除所有防火墙配置，计数器清零
+
+iptables -A INPUT -i lo -j ACCEPT    ### 允许本机进
+iptables -A OUTPUT -o lo -j ACCEPT   ### 允许本机出
+
+iptables -P INPUT  DROP  
+iptables -P OUTPUT  ACCEPT 
+iptables -P FORWARD  DROP   # 设置默认规则drop
+
+iptables -A INPUT -p all -s 192.168.58.0/24 -j ACCEPT  
+iptables -A INPUT -p all -s 10.0.0.0/24 -j ACCEPT  
+。。。
+####允许合法的网段ip进入
+iptables -A INPUT -p tcp -s 10.0.0.0/24 --dport 80 -j ACCEPT  ##打开80端口
+
+iptables -A INPUT -p icmp --icmp-type 8 -j ACCEPT    ##允许ping
+
+##允许关联的状态包(ftp服务会用)
+iptables -A INPUT -m state --state  ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -m state --state  ESTABLISHED,RELATED -j ACCEPT
+
+```
+
+
+Netfilter/iptables 所设置的规则是存放在内核内存中的，重启会失效，如果想要永久生效，使用:
+```
+/etc/init.d/iptables save
+iptables: Saving firewall rules to /etc/sysconfig/iptables:[  OK  ]
+或者使用
+iptables-save >  /etc/sysconfig/iptables  (第一次重定向，后面用追加)
+```
+
+
+
+
+* 服务器网关需具备如下条件
+    * 物理条件是具备双网卡，建议eth0外网地址，eth1内网地址
+    * 确保服务器网关B可以上网(B上网才能代理别的机器上网)。可以通过ping baidu.com测试
+    * 内核文件/etc/syscul.conf里开启转发功能。    
+        * 编辑 /etc/sysctl.conf,修改内容net.ipv4.ip_forward = 1，然后执行sysctl -p使修改生效。
+
+局域网共享有两条命令:
+```
+1.iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o ehh0 -j SNAT --to-source 192.168.58.136
+```
+* -s 10.0.0.0 办公室或IDC内网网段
+* -o eth0 为网关的外网卡接口
+* -j SNAT --to-source 是网关外网卡IP地址
+```
+2.伪装
+iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -j MASQUERADE 
+```
+
+```
+iptables -t nat -A PREROUTING -d 10.0.0.7 -p tcp --dport 80 -j DNAT --to-destination 191.168.1.8:9000 
+端口转发
+```
 
 ```
 iptables --help
