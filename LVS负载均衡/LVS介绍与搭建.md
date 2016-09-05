@@ -31,7 +31,39 @@ LVS:
       
 #####DR模式（熟练）
 
+* 1.通过在调度器LB上修改数据包的`目的MAC地址`实现转发。注意,源IP地址仍然是CIP,目的IP地址仍然是VIP.
+* 2.请求的报文经过调度器,而RS相应处理后的报文无需经过调度器LB,因此并发访问量大时使用效率很高(和NAT模式相比)
+* 3.因DR模式是通过MAC地址的改写机制实现的转发，因此所有RS节点和调度器LB只能在一个局域网LAN中(小缺点)
+* 4.需要注意RS节点的VIP的绑定(lo:vip,lol:vip)和ARP抑制的问题
+* 5.强调下:RS节点的默认网关不需要是调度器LB和DIP,而直接是IDC机房分配的上级路由器的IP(这是RS带油外网IP地址的情况)，理论讲:只要RS可以出网即可，不是必须要配置外网IP
+* 6.由于DR模式的调度器仅进行了目的MAC地址的改写，因此，调度器LB无法改变请求的报文和目的端口(和NAT要区别)
+* 7.当前，调度器LB支持几乎所有的UNIX,LINUX系统，但目前不支持WINDOWS系统，真实服务器RS节点可以是WINDOWS系统
+* 总的来说DR模式效率很高，但是配置也比较麻烦，因此，访问不是特别大的网站可以使用haproxy,nginx代替。这符合简单、易用、高效的原则。
+* 直接对外的访问业务,例如,web服务器做RS节点，RS最好用公网IP地址。如果不直接对外的业务，如MySQL存储系统RS节点，最好只用内部IP地址
 
+#####NAT模式
+#####TUN模式
+#####FULL NAT模式
+
+#####LVS调度算法:
+
+>LVS调度算法决定了如何在集群节点之间分布工作负荷
+
+* 固定调度算法:
+    - **rr: 轮询调度(Round-Robin)**
+        + 将请求依次分配不同的RS节点,也就是均摊请求。只适合于RS节点处理性能相差不大的情况
+    - **wrr:加权轮询调度(Weighted Round-Robin)**
+        + 根据不同RS节点的权值分配任务。权值较高的RS将优先获得任务。并且分配到的连接数将比权值较低的RS节点更多。相同权值的RS将得到相同数目的连接数。
+    - dh:目的地址哈希调度(Destination Hashing)
+    - sh:源地址哈希调度(Source Hashing)
+* 动态调度算法(SQD,NQ官方站点没提到,编译LVS可以看到)
+    - **wlc:加权最少连接数调度(Weighted Least-Connection)**
+        + 假设各台RS的权值一次为Wi(i=1..n),当前TCP连接数依次为Ti(i=1..n)，依次选取Ti/Wi为最小的RS作为下一个分配的Rs
+    - lc:最少连接数调度(Least-Connection)
+    - lblc:基于地址的最少连接数调度(Locality-Based Least-Connection)
+    - lblcr:基于地址带重复最少连接数调度(Locality-Based Least-Connection with Replication)
+    - SED: 最短的期望的延迟:(Shortest Expected Delay Scheduling SED)
+    - NQ:最少队列调度(Never Queue Scheduling)
 
 ####安装LVS软件:
 
