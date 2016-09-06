@@ -1,3 +1,7 @@
 查ip：
 	curl -s -4 icanhazip.com
 	curl -s -4 ipinfo.io/ip
+
+
+nginx yum包：
+http://nginx.org/packages/mainline/centos/6/x86_64/RPMS/

@@ -17,7 +17,7 @@ fastcgi原理:
 php安装需要的库:
 rpm -qa zlib-devel libxml2-devel libjpeg-devel libiconv-devel
 rpm -qa freetype-devel libpng-devel gd-devel curl-devel
-yum install zlib-devel libxml2-devel libjpeg-devel libiconv-devel freetype-devel libpng-devel gd-devel curl-devel
+yum install zlib-devel libxml2-devel libjpeg-devel libiconv-devel freetype-devel libpng-devel gd-devel curl-devel 
 yum install libxslt-devel -y
 
 libiconv-devel:
@@ -72,7 +72,7 @@ tar zxf php-5.6.24.tar.gz
 --with-xsl \
 --with-fpm-user=nginx \
 --with-fpm-group=nginx \
---enable-ftp 
+--enable-ftp \
 --enable-opcache=no
 
 make前:

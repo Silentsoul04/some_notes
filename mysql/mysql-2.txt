@@ -17,6 +17,8 @@
 
 编译安装mysql5.5:
 1.安装cmake:
+	yum -y install cmake 
+	编译安装:
 	cd ~/tools/
 	tar xf cmake-2.8.8.tar.gz
 	cd cmake-2.8.8
@@ -26,7 +28,7 @@
 	gmake install
 	cd ../
 2.依赖包:
-	yum install ncurses-devel -y
+	yum install ncurses-devel gcc-c++ -y
 3.解压安装
 tar zxf mysql-5.5.32.tar.gz 
 cd mysql-5.5.32
@@ -68,7 +70,7 @@ chown -R mysql:mysql /application/mysql/data/
 
 8.初始化
 cd /application/mysql/scripts/
-./mysql_install_db --basedir=/application/mysql/ --datadir=/application/mysql/data/ --user==mysql
+./mysql_install_db --basedir=/application/mysql/ --datadir=/application/mysql/data/ --user=mysql
 cp support-files/mysql.server /etc/init.d/mysqld
 
 /etc/init.d/mysqld start
