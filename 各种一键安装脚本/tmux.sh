@@ -23,3 +23,6 @@ make && make install
 # close your terminal window (flushes cached tmux executable)
 # open new shell and check tmux version
 tmux -V
+
+
+##  如果报错 configure: error:"curses not found" 执行yum install ncurses-devel

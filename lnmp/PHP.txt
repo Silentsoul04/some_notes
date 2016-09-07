@@ -15,10 +15,8 @@ fastcgi原理:
 
 编译安装php：
 php安装需要的库:
-rpm -qa zlib-devel libxml2-devel libjpeg-devel libiconv-devel
-rpm -qa freetype-devel libpng-devel gd-devel curl-devel
-yum install zlib-devel libxml2-devel libjpeg-devel libiconv-devel freetype-devel libpng-devel gd-devel curl-devel 
-yum install libxslt-devel -y
+
+yum install zlib-devel libxml2-devel libjpeg-devel freetype-devel libpng-devel gd-devel curl-devel libmcrypt libmcrypt-devel  mhash-devel mhash libxslt-devel mcrypt -y
 
 libiconv-devel:
 wget http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz
