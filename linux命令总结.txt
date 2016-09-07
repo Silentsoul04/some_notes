@@ -530,3 +530,4 @@ route -n 查看路由网关等信息
 
 
 arp -a 查看arp缓存，mac地址
+
