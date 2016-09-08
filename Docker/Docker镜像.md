@@ -39,3 +39,49 @@ hello-world         latest              c54a2cc56cbb        9 weeks ago         
 ```
 sudo docker run -t -i ubuntu:12.04 /bin/bash
 ```
+
+####创建镜像:
+
+* 从Docker Hub获取
+* 利用本地文件系统创建
+
+#####修改已有镜像
+
+* 先使用下载的镜像启动容器
+```
+sudo docker run -t -i training/sinatra /bin/bash
+root@17e25047c6f9:/#
+```
+注意：记住容器的 ID，稍后还会用到。
+```
+改源:
+sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+apt-get update -y
+```
+结束后,使用exit退出，现在容器已经被改变了,使用 `docker commit`命令来提交更新后的副本。
+```
+[root@hhf ~]# sudo docker commit -m "change apt repo" -a "Docker Newbee" 17e25047c6f9 hhf/ubuntu:v2 
+sha256:c56ac0e16c79eb3059ca65909d138e502c4f705a952a6ddb8692204ae973a1de
+
+-m: 提交的说明信息
+-a: 更新的用户信息
+17e25047c6f9: 用来创建镜像的容器的ID 
+最后指定目标镜像的仓库名和 tag 信息.
+```
+使用`docker images`可以查看心创建的镜像:
+
+```
+hhf/ubuntu          v2                  c56ac0e16c79        About a minute ago   104.8 MB
+```
+
+之后，可以使用新的镜像来启动容器
+
+```
+docker run -i -t hhf/ubuntu:v2 /bin/bash
+```
+
+##### 利用Dockerfile创建镜像
+
+
+使用`docker commit`来扩展一个镜像比较简单，但是不方便在团队中分享.我们可以使用`docker build`来创建一个新的镜像.为此,首先要创建一个Dockerfile，包含一下如何创建镜像的指令。
+
