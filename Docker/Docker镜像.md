@@ -85,3 +85,4 @@ docker run -i -t hhf/ubuntu:v2 /bin/bash
 
 使用`docker commit`来扩展一个镜像比较简单，但是不方便在团队中分享.我们可以使用`docker build`来创建一个新的镜像.为此,首先要创建一个Dockerfile，包含一下如何创建镜像的指令。
 
+。。。假装今天有push
