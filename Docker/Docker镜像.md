@@ -85,5 +85,74 @@ docker run -i -t hhf/ubuntu:v2 /bin/bash
 
 使用`docker commit`来扩展一个镜像比较简单，但是不方便在团队中分享.我们可以使用`docker build`来创建一个新的镜像.为此,首先要创建一个Dockerfile，包含一下如何创建镜像的指令。
 
-。。。假装今天有push
-。。。假装今天有push x2
+新建一个目录和一个 Dockerfile
+```
+mkdir hhf
+cd hhf
+touch Dockerfile
+```
+Dockerfile 中每一条指令都创建镜像的一层，例如：
+```
+# This is a comment
+FROM ubuntu:12.04
+MAINTAINER Docker Newbee <newbee@docker.com>
+RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+RUN apt-get update -y
+```
+Docker file 的基本语法是:
+
+* 使用#来注释
+* `FROM` 指令告诉 Docker 使用哪个镜像作为基础
+* 接着是维护者的信息
+* `RUN` 开头的指令会在创建中执行，比如安装一个软件包,在这里使用 sed 将默认的apt源替换成了阿里云的
+
+编写完 Dockerfile后可以使用`Docker build`来生成镜像
+
+```
+docker build -t="hhf/ubuntu:v3" .
+
+Step 1 : FROM ubuntu:12.04
+ ---> a11493a01736
+Step 2 : MAINTAINER Docker Newbee <newbee@docker.com>
+ ---> Running in 766d97773a41
+ ---> 3472980dd191
+Removing intermediate container 766d97773a41
+Step 3 : RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+ ---> Running in 3ef28746fe30
+ ---> 51c3d9df7cb4
+Removing intermediate container 3ef28746fe30
+Step 4 : RUN apt-get update -y
+ ---> Running in dd332cbfc0ff
+Get:1 http://mirrors.aliyun.com precise Release.gpg [198 B]
+Get:2 http://mirrors.aliyun.com precise-updates Release.gpg [198 B]
+。。。。。。
+ ---> b81aab333e2c
+Removing intermediate container dd332cbfc0ff
+Successfully built b81aab333e2c
+
+```
+
+`-t`标记用来添加tag,指定新的镜像的用户信息， “.” 是 Dockerfile 所在的路径（当前目录），也可以替换为一个具体的 Dockerfile 的路径。
+
+可以看到 build 进程在执行操作。它要做的第一件事情就是上传这个 Dockerfile 内容，因为所有的操作都要依据 Dockerfile 来进行。 然后，Dockfile 中的指令被一条一条的执行。每一步都创建了一个新的容器，在容器中执行指令并提交修改（就跟之前介绍过的 docker commit 一样）。当所有的指令都执行完毕之后，返回了最终的镜像 id。所有的中间步骤所产生的容器都被删除和清理了。
+
+**注意一个镜像不能超过 127 层**
+
+此外,还可以利用`ADD`命令复制本地文件到镜像,用`EXPOSE`命令向外开发端口，用`CMD`命令扫描容器启动后运行的程序等:例如
+```
+# put my local web site in myApp folder to /var/www
+ADD myApp /var/www
+# expose httpd port
+EXPOSE 80
+# the command to run
+CMD ["/usr/sbin/apachectl", "-D", "FOREGROUND"]
+```
+现在可以利用新创建的镜像来启动一个容器。
+```
+docker run -i -t hhf/ubuntu:v3  /bin/bash
+```
+
+还可以用 `docker tag` 命令来修改镜像的标签。
+```
+docker tag fda80281b6a5 hhf/ubuntu:14.04
+```
