@@ -156,3 +156,75 @@ docker run -i -t hhf/ubuntu:v3  /bin/bash
 ```
 docker tag fda80281b6a5 hhf/ubuntu:14.04
 ```
+
+#####从本地文件系统导入
+要从本地文件系统导入一个镜像，可以使用 openvz（容器虚拟化的先锋技术）的模板来创建： openvz 的模板下载地址为 [templates](http://openvz.org/Download/templates/precreated) 。
+
+比如，先下载了一个 centos-6 的镜像，之后使用以下命令导入：
+```
+wget http://download.openvz.org/template/precreated/centos-6-x86_64-minimal.tar.gz
+sudo cat centos-6-x86_64-minimal.tar.gz  |docker import - centos-6
+```
+然后查看新导入的镜像：
+```
+docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+centos-6            latest              ed9e5fd8869a        17 seconds ago      343.8 MB
+```
+#####上传镜像
+>用户可以通过 `docker push` 命令，把自己创建的镜像上传到仓库中来共享。例如，用户在 Docker Hub 上完成注册后，可以推送自己的镜像到仓库中。
+```
+docker login -u "lovehhf" -p "password"
+docker push lovehhf/ubuntu:12.04
+```
+
+####存出和载入
+
+#####存出镜像
+
+
+如果要导出镜像到本地文件，可以使用 docker save 命令。
+
+```
+docker save -o centos_6_x86_x64.tar centos-6:latest
+```
+
+#####载入镜像
+
+可以使用 `docker load` 从导出的本地文件中再导入到本地镜像库
+
+```
+sudo docker load --input centos_6_x86_x64.tar  
+或
+sudo docker load < centos_6_x86_x64.tar
+```
+
+这将导入镜像以及其相关的元数据信息（包括标签等）。
+
+
+####移除镜像
+#####移除本地镜像
+
+如果要移除本地的镜像，可以使用 `docker rmi` 命令。注意 docker rm 命令是移除容器。
+
+```
+docker rmi hhf/ubuntu:v3
+docker rmi ed9e5fd8869a
+```
+##### 清理所有未打过标签的本地镜像
+
+`docker images` 可以列出本地所有的镜像，其中很可能会包含有很多中间状态的未打过标签的镜像，大量占据着磁盘空间。
+
+使用下面的命令可以清理所有未打过标签的本地镜像
+
+```
+sudo docker rmi $(docker images -q -f "dangling=true")
+相当于===>
+sudo docker rmi $(docker images --quiet --filter "dangling=true")
+```
+
+#####镜像实现原理
+
+Docker 镜像是怎么实现增量的修改和维护的？ 每个镜像都由很多层次构成，Docker 使用 Union FS 将这些不同的层结合到一个镜像中去。
+
+通常 Union FS 有两个用途, 一方面可以实现不借助 LVM、RAID 将多个 disk 挂到同一个目录下,另一个更常用的就是将一个只读的分支和一个可写的分支联合在一起，Live CD 正是基于此方法可以允许在镜像不变的基础上允许用户在其上进行一些写操作。 Docker 在 AUFS 上构建的容器也是利用了类似的原理。
