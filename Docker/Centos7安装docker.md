@@ -58,6 +58,11 @@ For more examples and ideas, visit:
 
 ```
 
+也可以使用官方提供的脚本来安装 Docker。
+```
+sudo curl -sSL https://get.docker.com/ | sh
+```
+
 7.设置开机启动
 ```
 sudo chkconfig docker on
