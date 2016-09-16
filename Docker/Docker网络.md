@@ -76,6 +76,55 @@ docker run -d -p 8080:80  -p 4433:443 nginx
 
 创建容器的时候，系统默认会分配一个名字。自定义命令容器有2个好处
 
-* 自定义的命令，比较好记，比如一个web容器可以给它取名web
+* 自定义的名字，比较好记，比如一个web容器可以给它取名web
 * 当要连接其他容器的时候，，可以作为一个有用的参考点，比如连接web容器到db容器
 
+使用`--name`可以为容器自定义命令
+```
+docker run -d -P --name web nginx
+7440c5acd19bbe1f39c3ab995eec1c628e96f90453e643601c87e15942b36a2a
+```
+使用`docker ps -l`可以查看命名
+```
+docker ps -l
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                                           NAMES
+7440c5acd19b        nginx               "nginx -g 'daemon off"   50 seconds ago      Up 47 seconds       0.0.0.0:32771->80/tcp, 0.0.0.0:32770->443/tcp   web
+
+```
+
+也可以使用`docker inpect`+容器名查看
+```
+sudo docker inspect -f "{{ .Name }}" 7440c5acd19b
+/web
+```
+
+注意：容器的名称是唯一的。如果已经命名了一个叫 `web` 的容器，当你要再次使用 `web` 这个名称的时候，需要先用`docker rm` 来删除之前创建的同名容器。
+
+在执行 `docker run` 的时候如果添加 `--rm` 标记，则容器在终止后会立刻删除。注意，`--rm` 和 `-d` 参数不能同时使用。
+
+#####容器互联
+
+使用 `--link` 参数可以让容器之间安全的进行交互。
+
+先创建一个mysql数据库容器
+```
+docker run --name db -e MYSQL_ROOT_PASSWORD=password -d mysql
+ca4ea72397d233520134f3662c79fc4e526403ac65dfc824e1bd41e6d5401042
+```
+
+然后创建一个 wordpress 容器，并将它连接到 db 容器
+```
+docker run --name some-wordpress --link db:mysql -d wordpress
+96e27419d4ee53046c0c07ea7915ce1e6fecc9c1f951c74058b78635725f3937
+```
+
+wordpress容器建立互联关系。
+
+`--link`参数的格式为 `--link name:alias` name是要连接的容器名字，alias为这个连接的别名
+```
+docker ps
+CONTAINER ID        IMAGE                 COMMAND                  CREATED             STATUS              PORTS                                      NAMES
+96e27419d4ee        wordpress             "/entrypoint.sh apach"   2 minutes ago       Up 2 minutes        80/tcp                                     some-wordpress
+ca4ea72397d2        mysql                 "docker-entrypoint.sh"   5 minutes ago       Up 5 minutes        3306/tcp                                   db
+
+```
