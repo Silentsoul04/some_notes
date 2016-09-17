@@ -92,7 +92,7 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 
 ```
 
-也可以使用`docker inpect`+容器名查看
+也可以使用`docker inspect`+容器名查看
 ```
 sudo docker inspect -f "{{ .Name }}" 7440c5acd19b
 /web
@@ -128,3 +128,48 @@ CONTAINER ID        IMAGE                 COMMAND                  CREATED      
 ca4ea72397d2        mysql                 "docker-entrypoint.sh"   5 minutes ago       Up 5 minutes        3306/tcp                                   db
 
 ```
+
+Docker 在两个互联的容器之间创建了一个安全隧道，而且不用映射它们的端口到宿主主机上。在启动 db 容器的时候并没有使用 `-p` 和 `-P` 标记，从而避免了暴露数据库端口到外部网络上。
+
+Docker 通过 2 种方式为容器公开连接信息：
+
+* 环境变量
+* 更新 `/etc/hosts` 文件
+
+使用`env`可以查看容器的环境变量:
+```
+sudo docker run --rm --name wp2 --link db1:db1 wordpress env
+HOSTNAME=5a3c2b620bbf
+DB1_PORT_3306_TCP_PORT=3306
+PHP_INI_DIR=/usr/local/etc/php
+PHP_FILENAME=php-5.6.25.tar.xz
+DB1_ENV_MYSQL_VERSION=5.7.15-1debian8
+DB1_PORT_3306_TCP=tcp://172.17.0.3:3306
+DB1_ENV_MYSQL_MAJOR=5.7
+DB1_ENV_GOSU_VERSION=1.7
+PHPIZE_DEPS=autoconf        file        g++         gcc         libc-dev        make        pkg-config      re2c
+WORDPRESS_VERSION=4.6.1
+APACHE_ENVVARS=/etc/apache2/envvars
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+GPG_KEYS=0BD78B5F97500D450838F95DFE857D9A90D90EC1 6E4F6AB321FDC07F2C332E3AC2BF0BC433CFC8B3
+PWD=/var/www/html
+DB1_PORT_3306_TCP_ADDR=172.17.0.3
+DB1_PORT_3306_TCP_PROTO=tcp
+SHLVL=0
+HOME=/root
+PHP_SHA256=7535cd6e20040ccec4594cc386c6f15c3f2c88f24163294a31068cf7dfe7f644
+WORDPRESS_SHA1=027e065d30a64720624a7404a1820e6c6fff1202
+APACHE_CONFDIR=/etc/apache2
+DB1_ENV_MYSQL_ROOT_PASSWORD=password
+PHP_EXTRA_BUILD_DEPS=apache2-dev
+DB1_PORT=tcp://172.17.0.3:3306
+DB1_NAME=/wp2/db1
+PHP_VERSION=5.6.25
+PHP_EXTRA_CONFIGURE_ARGS=--with-apxs2
+```
+
+其中 DB1_ 开头的环境变量是供 web 容器连接 db 容器使用，前缀采用大写的连接别名。
+
+除了环境变量，Docker 还添加 host 信息到父容器的 /etc/hosts 的文件。
+
+用户可以链接多个父容器到子容器，比如可以链接多个 web 到 db 容器上。
