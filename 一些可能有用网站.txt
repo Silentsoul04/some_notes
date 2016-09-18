@@ -5,3 +5,5 @@
 
 nginx yum包：
 http://nginx.org/packages/mainline/centos/6/x86_64/RPMS/
+
+http://211.68.36.253:8080/userportal/
