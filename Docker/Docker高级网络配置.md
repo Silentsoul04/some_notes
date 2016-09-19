@@ -141,3 +141,82 @@ DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:80 to:172.
 #####配置 docker0 网桥
 
 Docker服务会默认创建一个 `docker0` 网桥(其上有一个 `docker0` 内部接口),它在内核层连接其他物理或虚拟网卡，这就将所有容器和本地主机都放在同一个物理网络。
+
+Docker 默认指定了 `docker0` 接口 的 IP 地址和子网掩码，让主机和容器之间可以通过网桥相互通信，它还给出了 MTU（接口允许接收的最大传输单元），通常是 1500 Bytes，或宿主主机网络路由上支持的默认值。这些值都可以在服务启动的时候进行配置。
+
+* --bip=CIDR -- IP 地址加掩码格式，例如 192.168.1.5/24
+* --mtu=BYTES -- 覆盖默认的 Docker mtu 配置
+
+也可以在配置文件中配置 DOCKER_OPTS，然后重启服务。 由于目前 Docker 网桥是 Linux 网桥，用户可以使用` brctl show` 来查看网桥和端口连接信息。
+```
+sudo brctl show
+bridge name     bridge id               STP enabled     interfaces
+docker0         8000.3a1d7362b4ee       no              veth65f9
+                                             vethdda6
+```
+注：brctl 命令在 Debian、Ubuntu 中可以使用 sudo apt-get install bridge-utils 来安装。
+
+每次创建一个新容器的时候，Docker 从可用的地址段中选择一个空闲的 IP 地址分配给容器的 `eth0` 端口。使用本地主机上 `docker0` 接口的 IP 作为所有容器的默认网关。
+```
+sudo docker run -i -t --rm ubuntu:12.04 /bin/bash
+
+root@eb7f66531a59:/# ip addr show eth0
+10: eth0@if11: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP 
+    link/ether 02:42:ac:11:00:05 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.5/16 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:acff:fe11:5/64 scope link 
+       valid_lft forever preferred_lft forever
+root@eb7f66531a59:/# ip route
+default via 172.17.0.1 dev eth0 
+172.17.0.0/16 dev eth0  proto kernel  scope link  src 172.17.0.5 
+```
+
+#####自定义网桥
+
+>除了默认的 docker0 网桥，用户也可以指定网桥来连接各个容器。
+
+在启动 Docker 服务的时候，使用 `-b BRIDGE` 或 `--bridge=BRIDGE`来指导使用的网桥。
+
+如果服务已经运行，那需要先停止服务，并删除旧的网桥。
+```
+$ sudo service docker stop
+$ sudo ip link set dev docker0 down
+$ sudo brctl delbr docker0
+```
+然后创建一个网桥 bridge0。
+```
+$ sudo brctl addbr bridge0
+$ sudo ip addr add 192.168.5.1/24 dev bridge0
+$ sudo ip link set dev bridge0 up
+```
+查看确认网桥创建并启动。
+```
+$ ip addr show bridge0
+4: bridge0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state UP group default
+    link/ether 66:38:d0:0d:76:18 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.5.1/24 scope global bridge0
+       valid_lft forever preferred_lft forever
+```
+配置 Docker 服务，默认桥接到创建的网桥上。
+```
+$ echo 'DOCKER_OPTS="-b=bridge0"' >> /etc/default/docker
+$ sudo service docker start
+```
+启动 Docker 服务。 新建一个容器，可以看到它已经桥接到了 bridge0 上。
+
+可以继续用 brctl show 命令查看桥接的信息。另外，在容器中可以使用 ip addr 和 ip route 命令来查看 IP 地址配置和路由信息。
+
+#####工具和示例
+
+* pipework
+    * Jérôme Petazzoni 编写了一个叫 pipework 的 shell 脚本，可以帮助用户在比较复杂的场景中完成容器的连接。
+
+* playground
+    * Brandon Rhodes 创建了一个提供完整的 Docker 容器网络拓扑管理的 Python库，包括路由、NAT 防火墙；以及一些提供 HTTP, SMTP, POP, IMAP, Telnet, SSH, FTP 的服务器。
+
+#####编辑网络配置文件
+
+Docker 1.2.0 后支持在运行中的容器里编辑 /etc/hosts, /etc/hostname 和 /etc/resolve.conf 文件。
+
+但是这些修改是临时的，只在运行的容器中保留，容器终止或重启后并不会被保存下来。也不会被 docker commit 提交。
