@@ -63,7 +63,6 @@ common:
     search_backend: "_env:SEARCH_BACKEND:"
     sqlalchemy_index_database:
         "_env:SQLALCHEMY_INDEX_DATABASE:sqlite:////tmp/docker-registry.db"
-
 prod:
     loglevel: warn
     storage: s3
