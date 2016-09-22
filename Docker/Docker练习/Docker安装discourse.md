@@ -45,7 +45,7 @@ sudo vim containers/app.yml
   DISCOURSE_DEVELOPER_EMAILS: '853885165@qq.com'   ###开发者邮箱地址
 
   ## 配置SMTP邮箱
-  DISCOURSE_SMTP_ADDRESS: smtp.qq.com         # 账号,必选
+  DISCOURSE_SMTP_ADDRESS: smtp.qq.com              # smtp地址
   DISCOURSE_SMTP_PORT: 25                          # 端口(可选, 默认 587)
   DISCOURSE_SMTP_USER_NAME: 853885165@qq.com       # 必选
   DISCOURSE_SMTP_PASSWORD: PASSSWORD               # 必选
