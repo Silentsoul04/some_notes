@@ -20,6 +20,10 @@ function soft_links(){
 	ln -s /usr/local/bin/python2.7  /usr/bin/python
 }
 
+function install_pip(){
+	curl  https://bootstrap.pypa.io/get-pip.py | python2.7 -
+}
+
 function fix_error(){
 	sed -i  '1s#.*#\#!/usr/bin/python2.6#g' /usr/bin/yum
 }
@@ -29,4 +33,5 @@ function fix_error(){
 pre_install
 compile_python
 soft_links
+install_pip
 fix_error
