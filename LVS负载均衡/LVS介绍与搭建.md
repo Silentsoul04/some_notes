@@ -98,3 +98,28 @@ make && make install
 /sbin/ipvsadm == modprobe ip_vs
 lsmod|grep ip_lv
 ```
+
+#####手动配置LVS
+
+配置vip:
+
+```
+ifconfig eth1:0 10.0.0.10/24 up
+route add -host 10.0.0.10 dev eth1
+```
+
+* ipvsadm 常用选项
+    * -C   清空所有
+    * -A   添加虚拟服务
+    * -t   指定一个vip地址和端口
+    * -s   指定调度算法(rr|wrr|lc|wlc|lblc|lblcr|dh|sh|sed|nq)
+    * -p + 秒数  会话保持时间  
+    * -g   DR模式
+    * -i   TUN模式
+    * -m   NAT模式
+    * -w   权重
+    * -D   删除虚拟服务
+    * -d   删除节点
+    * -S   保存
+    * -L   列出ipvsadm列表
+    * -n   以数字形式显示地址和端口
