@@ -80,3 +80,21 @@ LVS:
     - 192.168.1.18  RS1(真实服务器)
     - 192.168.1.19  RS2(真实服务器)
     - 假设10.0.0.0/24为内网卡，192.168.1.0/24为外网卡
+
+
+#####安装LVS
+
+
+```
+ln  -s /usr/src/kernels/2.6.32-642.4.2.el6.x86_64/ /usr/src/linux
+wget http://linuxvirtualserver.org/software/kernel-2.6/ipvsadm-1.26.tar.gz
+tar zxf ipvsadm-1.26.tar.gz 
+cd ipvsadm-1.26
+
+yum install libnl* popt* -y      ###是个坑,没有会报错
+
+make && make install
+
+/sbin/ipvsadm == modprobe ip_vs
+lsmod|grep ip_lv
+```
