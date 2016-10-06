@@ -123,3 +123,5 @@ route add -host 10.0.0.10 dev eth1
     * -S   保存
     * -L   列出ipvsadm列表
     * -n   以数字形式显示地址和端口
+
+
