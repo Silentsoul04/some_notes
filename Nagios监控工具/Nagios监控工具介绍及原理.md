@@ -63,5 +63,9 @@ Nagios本身只是一个监考平台，其具体的监控工作都是通过插�
 
 ![NSCA原理图](images/NSCA原理图.jpg)
 
-5.
+5.Nagios监控工具综合系统简单原理图
+
 ![Nagios监控工具综合系统简单原理图](images/Nagios监控工具综合系统简单原理图.jpg)
+
+
+
