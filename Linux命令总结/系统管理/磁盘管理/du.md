@@ -24,8 +24,6 @@ du [选项] [文件]
 * 使用示例:
 
 
-du:
-
 ```
 [root@localhost ~]# du
 
