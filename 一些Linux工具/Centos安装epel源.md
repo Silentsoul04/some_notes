@@ -7,7 +7,7 @@ EPEL ( Extra Packages for Enterprise Linux，企业版Linux的额外软件包) �
 #####安装epel源:
 1.
 ```
-sudo yum install epel-release
+sudo yum -y install epel-release
 sudo yum makecache
 ```
 
