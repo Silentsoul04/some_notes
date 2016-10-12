@@ -1,13 +1,17 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+import re
 
-url = "http://www.pythonscraping.com/pages/page3.html"
+urlbase = "http://www.pythonscraping.com/"
 
-html = urlopen(url)
+htmlurl = urlbase + "pages/page3.html"
+
+html = urlopen(htmlurl)
 bsObj = BeautifulSoup(html.read(),"html.parser")
 
 # print(bsObj)
 
-print(bsObj.find_all("img"))
-# for sibling in bsObj.find("table",{"id":"giftList"}).tr.next_siblings:
-#     print(sibling)
+imgs = bsObj.find_all("img",{"src":re.compile("\.\.\/img\/gifts/img(.*)\.jpg")})
+
+for img in imgs:
+    print(img["src"])  #属性参数 attributes 是用一个 Python字典封装一个标签的若干属性和对应的属性值。
