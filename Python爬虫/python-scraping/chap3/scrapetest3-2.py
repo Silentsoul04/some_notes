@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import re
 
 html = urlopen("http://en.wikipedia.org/wiki/Kevin_Bacon")
-bsObj = BeautifulSoup(html.read(),"html.parser")
+bsObj = BeautifulSoup(html,"html.parser")
 
 """
 wikipedia 指向词条的链接有三个特点:

@@ -1,5 +1,5 @@
 from urllib.request import urlopen
-# from urllib.error import URLError
+from urllib.error import URLError,HTTPError
 from bs4 import BeautifulSoup
 import re
 import datetime
@@ -19,4 +19,7 @@ links = getLinks("/wiki/Python")
 while len(links) > 0:
     newArticle = links[random.randint(0,len(links)-1)].attrs["href"]
     print(newArticle)
-    links = getLinks(newArticle)
+    try:
+        links = getLinks(newArticle)
+    except [HTTPError,URLError] as e:
+        print(e)
