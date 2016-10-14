@@ -1,9 +1,10 @@
 from urllib.request import urlopen
-# from urllib.error import URLError,HTTPError
+from urllib.error import HTTPError
 from bs4 import BeautifulSoup
 import re
 import datetime
 import random
+import json
 
 random.seed(datetime.datetime.now())
 
@@ -30,6 +31,14 @@ def getHistoryIPs(pageUrl):
         addressList.add(ipAddress.get_text())
     return addressList
 
+def getCountry(ipAddress):
+    try:
+        response = urlopen("http://freegeoip.net/json/" + ipAddress).read().decode('utf-8')
+    except HTTPError:
+        return None
+    responseJson = json.loads(response)
+    return responseJson.get("country_code")
+
 links = getLinks("/wiki/Python")
 
 while len(links) > 0:
@@ -39,6 +48,8 @@ while len(links) > 0:
         for historyIP in historyIPs:
             # pattern = re.compile("[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}")
             # historyIP = pattern.findall(historyIP)
-            print(historyIP)
+            country = getCountry(historyIP)
+            if country is not None:
+                print(historyIP + " is from " + country)
     newLink = links[random.randint(0,len(links)-1)].attrs["href"]
     links = getLinks(newLink)
