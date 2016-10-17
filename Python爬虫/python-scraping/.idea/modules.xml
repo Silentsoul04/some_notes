@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/python-scraping.iml" filepath="$PROJECT_DIR$/.idea/python-scraping.iml" />
+      <module fileurl="file://E:/python/spider/.idea/spider.iml" filepath="E:/python/spider/.idea/spider.iml" />
     </modules>
   </component>
 </project>

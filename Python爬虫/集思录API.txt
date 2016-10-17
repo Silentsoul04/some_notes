@@ -1,0 +1,31 @@
+集思录API：
+
+    # 分级A的接口
+    __funda_url = 'http://www.jisilu.cn/data/sfnew/funda_list/?___t={ctime:d}'
+
+    # 分级B的接口
+    __fundb_url = 'http://www.jisilu.cn/data/sfnew/fundb_list/?___t={ctime:d}'
+
+    # 母基接口
+    __fundm_url = 'https://www.jisilu.cn/data/sfnew/fundm_list/?___t={ctime:d}'
+
+    # 分级套利的接口
+    __fundarb_url = 'http://www.jisilu.cn/data/sfnew/arbitrage_vip_list/?___t={ctime:d}'
+
+    # 集思录登录接口
+    __jsl_login_url = 'https://www.jisilu.cn/account/ajax/login_process/'
+
+    # 集思录 ETF 接口
+    __etf_index_url = "https://www.jisilu.cn/jisiludata/etf.php?___t={ctime:d}"
+    # 黄金 ETF , 货币 ETF 留坑,未完成
+    __etf_gold_url = "https://www.jisilu.cn/jisiludata/etf.php?qtype=pmetf&___t={ctime:d}"
+    __etf_money_url = "https://www.jisilu.cn/data/money_fund/list/?___t={ctime:d}"
+
+    # 集思录QDII接口
+    __qdii_url = "https://www.jisilu.cn/data/qdii/qdii_list/?___t={ctime:d}"
+    # 可转债
+    __cb_url = "https://www.jisilu.cn/data/cbnew/cb_list/?___t={ctime:d}"
+
+
+150085
+{'fundb_index_increase_rt': '-1.05%', 'recalc_to': None, 'fundb_upper_recalc_rt': '92.91%', 'funda_ratio': 5, 'funda_current_price': '1.078', 'fundb_increase_rt': '-0.99%', 'fundb_capital_rasising_rt': '7.01%', 'fundb_discount_rt': '-5.02%', 'fundb_id': '150086', 'fundb_volume': '402.53', 'calc_info': None, 'fundb_lower_recalc_rt': '38.67%', 'owned': 0, 'manage_fee': '1.220', 'fundb_base_est_dis_rt': '0.17%', 'fundb_base_fund_id': '163111', 'b_est_val': '1.052', 'fundb_upper_price': '1.110', 'maturity_dt': '2017-05-08', 'fundm_value': '1.0472', 'fundb_lower_price': '0.908', 'fundb_nav_dt': '2016-10-14', 'fundm_nav_dt': '2016-10-14', 'fundb_value': '1.0727', 'fundb_net_leverage_rt': '1.971', 'coupon': '5.000', 'fundb_discount_rt2': '-5.30', 'upper_recalc_price': '2.00', 'coupon_descr': '+3.5%', 'fundb_base_price': '1.0472', 'asset_ratio_last': '97%', 'fundb_index_name': '中小板指', 'fundb_ratio': 5, 'last_time': '15:00:03', 'funda_upper_price': '1.186', 'coupon_descr_s': '+3.5%', 'status_cd': 'N', 'funda_id': '150085', 'fundb_current_price': '0.999', 'fundb_price_leverage_rt': '2.076', 'fundb_index_id': '399005', 'fundb_name': '中小板B', 'funda_lower_price': '0.970', 'funda_name': '中小板A', 'fundb_base_est_dis_rt_tip': '', 'fundb_left_year': '0.56', 'abrate': '5:5', 'funda_increase_rt': '0.00', 'fundb_unit_capital_rasising_rt': '6.51%'}
