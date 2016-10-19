@@ -4,6 +4,10 @@ Android系统四大组件分别是 **活动（Activity**、**服务（Service）
 广播接收器可以允许你的应用接收来自各处的广播消息，比如电话、短信等，当然你的应用同样也可以向外发出广播消息。内容提供器则为应用程序之间共享数据提供了可能，比如你想要读取系统电话簿中的联系人，就需要通过内容提供器来实现。
 
 
+
+Android目录结构:
+
+
 1. src
 
 毫无疑问，src 目录是放置我们所有 Java 代码的地方，它在这里的含义和普通 Java项目下的 src 目录是完全一样的，展开之后你将看到我们刚才创建的HelloWorldActivity文件就在里面。
@@ -22,8 +26,7 @@ Android系统四大组件分别是 **活动（Activity**、**服务（Service）
 
 5. libs
 
-如果你的项目中使用到了第三方 Jar包，就需要把这些 Jar 包都放在 libs 目录下，放在这个目录下的 Jar 包都会被自动添加到构建路径里去。你可以展开上图中Android 4.0、第一行代码 —— Android 18 Android Private Libraries、Android Dependencies 这些库，其中显示的Jar 包都是已经被
-添加到构建路径里的。
+如果你的项目中使用到了第三方 Jar包，就需要把这些 Jar 包都放在 libs 目录下，放在这个目录下的 Jar 包都会被自动添加到构建路径里去。你可以展开上图中Android 4.0、第一行代码 —— Android 18 Android Private Libraries、Android Dependencies 这些库，其中显示的Jar 包都是已经被添加到构建路径里的。
 
 6. res
 
