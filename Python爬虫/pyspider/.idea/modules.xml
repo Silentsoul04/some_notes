@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../pyspider/.idea/pyspider.iml" filepath="$PROJECT_DIR$/../pyspider/.idea/pyspider.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/pyspider.iml" filepath="$PROJECT_DIR$/.idea/pyspider.iml" />
     </modules>
   </component>
 </project>
