@@ -32,6 +32,27 @@ class JikeSpider(object):
         every_class = re.findall('<li(.*?)</li>',source,re.S)
         return every_class
 
-jikespider = JikeSpider()
+    def getInfo(self,eachClass):
+        info = {}
+        info['title'] = re.search('title=(.*?) alt',eachClass,re.S)
+        info['content'] = re.search('<p style="height: 0px; opacity: 0; display: none;">(.*?)</p>',eachClass,re.S)
+        timeandlevel = re.findall('<em>(.*?)</em>',eachClass,re.S)
+        info['time'] = timeandlevel[0]
+        info['classlevel'] = timeandlevel[1]
+        info['classnum'] = re.search('<em class="learn-number">(.*?)</em>',eachClass,re.S)
+        return info
 
-print jikespider.changePage("http://www.jikexueyuan.com/course/?pageNum=1",20)
+    def saveInfo(self,classinfo):
+        f = open('info.txt','a')
+        for each in classinfo:
+            f.writelines('title' + each['title'] + '\n')
+            f.writelines('content' + each['content'] + '\n')
+            f.writelines('time' + each['time'] + '\n')
+            f.writelines('classlevel' + each['classlevel'] + '\n')
+            f.writelines('classnum' + each['classnum'] + '\n\n')
+
+if __name__ == '__main__':
+
+    jikespider = JikeSpider()
+
+    print jikespider.getSource("http://www.jikexueyuan.com/course/?pageNum=1")
