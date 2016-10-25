@@ -63,7 +63,6 @@ unixTime = int(time.time()*1000)
 #  'owned': 0,
 #  'status_cd': 'N'}
 # }
-
 # 请求
 url = "https://www.jisilu.cn/data/sfnew/funda_list/%s" % str(unixTime)
 rep = requests.get(url,headers=headers)
