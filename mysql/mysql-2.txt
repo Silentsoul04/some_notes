@@ -595,7 +595,7 @@ select id,name from test  order by id;  ===>排序
 select id,name from test  order by id desc; ===>倒序排序
 
 修改表的数据:
-1)update 表明 set 字段=新值...where 条件(一定要注意条件)
+1)update 表名字 set 字段=新值...where 条件(一定要注意条件)
 
 删除:
 delete from test where id=1; 删除test表中id为1的列 
