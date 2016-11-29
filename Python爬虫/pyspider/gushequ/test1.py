@@ -13,7 +13,7 @@ headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "zh-CN,zh;q=0.8,en;q=0.6"}
 
-url = "http://www.zixinke.cn/2016/11/page/1/"
+url = "http://www.zixinke.cn/2016/11/page/8/"
 
 class GuSheQu():
     def __init__(self):
@@ -46,7 +46,7 @@ class GuSheQu():
 
     def insertInfo(self,date,title,url,content):
         try:
-            conn = MySQLdb.connect(host='119.29.9.37', user='gushequ', passwd='gushequ123', charset='utf8',port=3306)
+            conn = MySQLdb.connect(host='182.254.226.241', user='gushequ', passwd='gushequ123', charset='utf8',port=3306)
             cur = conn.cursor()
             # cur.select_db('mysql')
             conn.select_db('gushequ')
@@ -54,7 +54,7 @@ class GuSheQu():
             # post_name,to_ping,pinged,post_modified,post_modified_gmtpost_content_filtered,post_parent,guid,menu_order
             # post_type,post_mime_type,comment_count
             value = [date,title,url,content]
-            cur.execute("insert into gushequ(post_date,post_title,url,post_content) values(%s,%s,%s,%s);", value)
+            cur.execute("insert into gushequ1(post_date,post_title,url,post_content) values(%s,%s,%s,%s);", value)
             conn.commit()
             cur.close()
             conn.close()
@@ -68,33 +68,17 @@ class GuSheQu():
 
 if __name__ == '__main__':
     gushequ = GuSheQu()
-    allPageUrl =  gushequ.changePage(url,50)
+    allPageUrl =  gushequ.changePage(url,8)
     for pageUrl in allPageUrl:
         print "\n" + pageUrl + ":"
         html = gushequ.getHtml(pageUrl)    ## 获取网站源代码
 
         allArticleUrl = gushequ.getArticleUrl(html)   ## 网站内的文章url
-        # for articleUrl in allArticleUrl:
-        #     print articleUrl
-        #
-        allArticleTitle = gushequ.getArticleTitle(html)
-        # for ArticleTitle in allArticleTitle:
-        #     print ArticleTitle
 
-        # for i in range(4):
-        #     date = gushequ.getArticleDate(allArticleTitle[i])
-        #     print date + " " + allArticleTitle[i] + " " + allArticleUrl[i]
-        #     print gushequ.getArticleDetail(allArticleUrl[i])
+        allArticleTitle = gushequ.getArticleTitle(html)  ## 标题
 
+        for i in range(2):
+             date = gushequ.getArticleDate(allArticleTitle[i])
+             print date + " " + allArticleTitle[i] + " " + allArticleUrl[i]
+             print gushequ.getArticleDetail(allArticleUrl[i])
 
-        for i in range(len(allArticleUrl)):
-            try:
-                date = gushequ.getArticleDate(allArticleTitle[i])  ##获取文章日期
-            except IndexError as e :
-                date = '20100000'
-                print e
-            title = allArticleTitle[i]
-            url = allArticleUrl[i]
-            content = gushequ.getArticleDetail(allArticleUrl[i])
-            print "插入数据: %s" % title
-            gushequ.insertInfo(date, title, url, content)
