@@ -66,9 +66,13 @@ class GuSheQu():
         articleDetail = re.findall(r'<div class="entry-content">(.*?)<div class="open_social_box share_box">',html,re.S)
         return articleDetail[0]
 
+    def getImages(self,url,html):
+        imgUrl = re.findall('src="http://www.zixinke.cn/wp-content/uploads/2016/11/(.*?)" alt="', html, re.S)
+        return imgUrl
+
 if __name__ == '__main__':
     gushequ = GuSheQu()
-    allPageUrl =  gushequ.changePage(url,50)
+    allPageUrl =  gushequ.changePage(url,4)
     for pageUrl in allPageUrl:
         print "\n" + pageUrl + ":"
         html = gushequ.getHtml(pageUrl)    ## 获取网站源代码
@@ -81,20 +85,21 @@ if __name__ == '__main__':
         # for ArticleTitle in allArticleTitle:
         #     print ArticleTitle
 
-        # for i in range(4):
-        #     date = gushequ.getArticleDate(allArticleTitle[i])
-        #     print date + " " + allArticleTitle[i] + " " + allArticleUrl[i]
-        #     print gushequ.getArticleDetail(allArticleUrl[i])
+        for i in range(4):
+            date = gushequ.getArticleDate(allArticleTitle[i])
+            print date + " " + allArticleTitle[i] + " " + allArticleUrl[i]
 
 
-        for i in range(len(allArticleUrl)):
-            try:
-                date = gushequ.getArticleDate(allArticleTitle[i])  ##获取文章日期
-            except IndexError as e :
-                date = '20100000'
-                print e
-            title = allArticleTitle[i]
-            url = allArticleUrl[i]
-            content = gushequ.getArticleDetail(allArticleUrl[i])
-            print "插入数据: %s" % title
-            gushequ.insertInfo(date, title, url, content)
+        # for i in range(len(allArticleUrl)):
+        #     try:
+        #         date = gushequ.getArticleDate(allArticleTitle[i])  ##获取文章日期
+        #     except IndexError as e :
+        #         date = '20100000'
+        #         print e
+        #     title = allArticleTitle[i]
+        #     url = allArticleUrl[i]
+        #     content = gushequ.getArticleDetail(allArticleUrl[i])
+        #     print "插入数据: %s" % title
+        #     gushequ.insertInfo(date, title, url, content)
+
+        # 保存图片文件到本地
