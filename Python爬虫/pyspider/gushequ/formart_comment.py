@@ -365,15 +365,15 @@ commands = [{
 
 count = 1
 
-html = ''
-html.join('<h2 style="color: #ff4c00;">精选留言:</h2>\n')
+
+print ('<h2 style="color: #ff4c00;">精选留言:</h2>')
 print ("<ul>")
 for command in commands:
     reply_content = re.sub(r"\\","",command["reply"]["reply_list"][0]["content"])
     command_content = re.sub(r"\\","",command["content"])
-    html.join("<li>" + str(count) + "\n<blockquote>" + command_content + "</blockquote>\n")
-    html.join('<span style="color: #ff4c00;">回复：</span>\n')
-    html.join(reply_content +"</li>\n")
+    print "<li>" + str(count) + "\n<blockquote>" + command_content + "</blockquote>"
+    print '<span style="color: #ff4c00;">回复：</span>'
+    print reply_content +"</li>\n"
     count  += 1
 
-print html
+print ("</ul>")
