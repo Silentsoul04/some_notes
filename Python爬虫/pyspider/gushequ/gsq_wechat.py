@@ -7,6 +7,8 @@ import re
 import time
 import random
 import datetime
+import MySQLdb
+
 
 """
 爬取微信公众号文章信息
@@ -21,6 +23,7 @@ def timestamp_datetime(value):
     # 最后再经过strftime函数转换为正常日期格式。
     dt = time.strftime(format, value)
     return dt
+
 def save_img(url,cover_name):
     img = requests.get(url)
     print "正在保存: " + cover_name
@@ -30,12 +33,38 @@ def save_img(url,cover_name):
 
 def get_cover_name(datetime,cover):
     img_name = re.sub(r"-| |:","",datetime)
-    img_format = re.search("wx_fmt=(.*?)$",cover,re.S).group(1)
+    try:
+        img_format = re.search("wx_fmt=(.*?)$",cover,re.S).group(1)
+    except AttributeError as e:
+        img_format = 'png'
     return img_name + "." + img_format
+
+
+def save_archive(id, datetime ,title, digest, content_url, cover, content,source_url):
+    try:
+        conn = MySQLdb.connect(host='139.199.197.243', user='gushequ', passwd='gushequ123', charset='utf8', port=3306)
+        cur = conn.cursor()
+        # cur.select_db('mysql')
+        conn.select_db('gushequ')
+        value = [id, datetime,title,digest,content_url,cover,content,source_url]
+        print "正在将id为%s的文章插入数据库" % id
+        cur.execute("insert into gushequ(id,datetime,title,digest,content_url,cover,content,source_url) values(%s,%s,%s,%s,%s,%s,%s,%s);", value)
+        conn.commit()
+        cur.close()
+        conn.close()
+    except MySQLdb.Error, e:
+        print 'Mysql Error Msg:', e
+
+def get_content(url,headers,cookies,params):
+    rep_row = requests.get(url,headers=headers,params=params,cookies=cookies).content
+    rep = eval(rep_row)
+    return rep["content_noencode"]
+
 
 random.seed(datetime.datetime.now())
 count_page = 0
-frommsgid = 206633550
+frommsgid = 26496
+
 while frommsgid>0:
     headers =  {
         "X-Requested-With": "XMLHttpRequest",
@@ -46,23 +75,24 @@ while frommsgid>0:
 
     cookies = {
     "malluin":"MTUyNTY1MDYxMA==",
-    "mallkey":"9ed31d4918c154c84b64e3e51f32628117a78eeda6217538cd3dc98e5e29c0a44ebf252300492e849ba4f3c76a2a32154215407adb26c6db2a0cf85781c6e5f2446dfb698b477f50fca3a788bcbb3f8d",
-    "wxtokenkey":"48edd5958dc55a71afa3d4dd786db11cead27fccb4fbe6ffcfc34a1884aeab87",
-    "wxticket":"1826103214",
-    "wxticketkey":"21b7ee26f5d8a7dd9fa200bf41a210c6ead27fccb4fbe6ffcfc34a1884aeab87",
-    "wap_sid":"CLKpvtcFEkBHaDE5d2pZeVFMSnhrU2RfYUtVQVpMcUo1VmpqbzRZR0lKcFhKZXZPTlhCbUJrVHlnWXpva3NRR3ZVRy1VT2E1GAQg/REozILN9AgwrPKjwgU=",
-    "wap_sid2":"CLKpvtcFElxSOHllZ19TMU92RUJudVlmc0pZbUNXY0d0LUh4SGY5V01ZQ1FWMmRMZ01nNV9PX3piOXFLQ2VJcjBtYlZTY2ZOVWQ0V1poTTB3a1J1LVlhSFZZYUNLSElEQUFBfg=="
+    "mallkey":"9ed31d4918c154c81ac1d8659fe2abf93864cd249f5ec5c446888d2908c91203afb3143239f3025bf51c0456bff3101eea0999b15eadf281b8373363f7c541d86dc8d5adc5574c9da69c59891ba4461b",
+    "wxtokenkey":"39945b72bdac5c02fcb61834eaa104488b7ffe6ea4635899f9a4d475662cbda1",
+    "wxticket":"4119252110",
+    "wxticketkey":"53ac982d0e0895e3f705dde14749623a8b7ffe6ea4635899f9a4d475662cbda1",
+    "wap_sid":"CLKpvtcFEkBrNFcxdDJSSXZ1R0xmY3dyZU1YbDFtN09YVVM3bGdoMUtKMldRaF9oWWNwMFRubDUzMGpaOENIQ3djSG5HSGQ3GAQg/BEozILN9AgwnsepwgU=",
+    "wap_sid2":"CLKpvtcFElxfakNZSG4wQ0szOVlQR2Z3UFA4REZ0a0RFV0o4SUxJbmJTNWdTYVRJRnVCQXBwd0JUaXlsY2ZCTUtwUlFoV3NhZ0dtamJUbnA3OFBRQlU5U2Z6SWtLSElEQUFBfg=="
     }
+
 
 
     params = {
         "__biz":"MjM5MjAxNTE4MA==",
         "uin":"MTUyNTY1MDYxMA==",
-        "key":"9ed31d4918c154c81c1e47402cf4b886216491e2b7595ab1a147c8e086453998191c7ddaa2fe3c356587ceadbab16332b2b62efc3d8018048893f0d90336be98ff78f3cd6781346e1c0e2a5590b4c848",
+        "key":"9ed31d4918c154c8c61b6402efbc67e6aba2fb23f8e661d84ac95894737162482ee1a443a5a7300826be696f02ba4cc857279a78cceac256101dd15913fdefd009deba6aa76833ab245234e45e63b6b8",
         "f":"json",
         "frommsgid":str(frommsgid),
         "count":"10",
-        "pass_ticket":"i%252Bw8A%252B49swaRAgzn7XmBucHYj%252F64YTYyQqwTihGjFKX21uLdN8cVKgPjgFu%252FxxKM",
+        "pass_ticket":"76kvCSCmPrX5NotYXLv12hizlZxH8Yq9pcfoAeRNxGKC+RrudcWjfwJpaZKvsg9W",
         "wxtoken":"",
         "x5":"0"}
 
@@ -79,27 +109,38 @@ while frommsgid>0:
             url_row = archive_info["app_msg_ext_info"]["content_url"]
             url = re.sub(r"\\|amp;","",url_row)
             title = archive_info["app_msg_ext_info"]["title"]
+            digest = archive_info["app_msg_ext_info"]["digest"]
             cover_row = archive_info["app_msg_ext_info"]["cover"]
             cover = re.sub(r"\\","",cover_row)
             datetime = timestamp_datetime(archive_info["comm_msg_info"]["datetime"])
             id = archive_info["comm_msg_info"]["id"]
-
+            content = get_content(url,headers,cookies,params)
+            source_url = re.sub(r"\\","",archive_info["app_msg_ext_info"]["source_url"])
+            save_archive(id, datetime ,title, digest, url, cover, content,source_url)
             # cover_name = get_cover_name(datetime,cover)
-           # save_img(cover,cover_name)
-            print "标题: " + title
-            print "链接: " + url
-            print "封面: " + cover
-            print "发布时间: " + datetime
-            print "文章id：" + str(id)
-            print "#########################"
+            # save_img(cover,cover_name)
+            # print "标题: " + title
+            # print "链接: " + url
+            # print "封面: " + cover
+            # print "发布时间: " + datetime
+            # print "文章id：" + str(id)
+            # print "#########################"
+            # print source_url
+            time.sleep(random.random() * 5)
         except KeyError as e:
-            title = "这是简版。"
+            title = "这是糙版"
+            digest = None
+            url = None
+            cover = None
+            source_url = None
             datetime = timestamp_datetime(archive_info["comm_msg_info"]["datetime"])
             id = archive_info["comm_msg_info"]["id"]
-            print title
-            print "发布时间: " + datetime
-            print "文章id：" + str(id)
-            print "#########################"
+            content = archive_info["comm_msg_info"]["content"]
+            save_archive(id, datetime, title, digest, url, cover, content,source_url)
+            # print title
+            # print "发布时间: " + datetime
+            # print "文章id：" + str(id)
+            # print "#########################"
     frommsgid = id
     count_page += 1
     time.sleep(random.random()*10)
