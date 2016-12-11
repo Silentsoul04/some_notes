@@ -51,7 +51,10 @@ class jiSiLu(object):
         return stauts
 
     def getReplys(self,html):
-        replys = re.search('<h2>(\d+) 个回复</h2>',html,re.S).group(1)
+        try:
+            replys = re.search('<h2>(\d+) 个回复</h2>',html,re.S).group(1)
+        except AttributeError as e:
+            replys = '0'
         return replys
 
     def saveData(self,id,title,post_user,post_date,new_reply_date,replys,views,attentions,url):
