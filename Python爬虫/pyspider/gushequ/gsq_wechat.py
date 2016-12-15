@@ -58,12 +58,12 @@ def save_archive(id, datetime ,title, digest, content_url, cover, content,source
 def get_content(url,headers,cookies,params):
     rep_row = requests.get(url,headers=headers,params=params,cookies=cookies).content
     rep = eval(rep_row)
-    return rep["content_noencode"]
+    return rep_row
 
 
 random.seed(datetime.datetime.now())
 count_page = 0
-frommsgid = 26496
+frommsgid = 1000000180
 
 while frommsgid>0:
     headers =  {
@@ -75,12 +75,12 @@ while frommsgid>0:
 
     cookies = {
     "malluin":"MTUyNTY1MDYxMA==",
-    "mallkey":"9ed31d4918c154c81ac1d8659fe2abf93864cd249f5ec5c446888d2908c91203afb3143239f3025bf51c0456bff3101eea0999b15eadf281b8373363f7c541d86dc8d5adc5574c9da69c59891ba4461b",
-    "wxtokenkey":"39945b72bdac5c02fcb61834eaa104488b7ffe6ea4635899f9a4d475662cbda1",
-    "wxticket":"4119252110",
-    "wxticketkey":"53ac982d0e0895e3f705dde14749623a8b7ffe6ea4635899f9a4d475662cbda1",
-    "wap_sid":"CLKpvtcFEkBrNFcxdDJSSXZ1R0xmY3dyZU1YbDFtN09YVVM3bGdoMUtKMldRaF9oWWNwMFRubDUzMGpaOENIQ3djSG5HSGQ3GAQg/BEozILN9AgwnsepwgU=",
-    "wap_sid2":"CLKpvtcFElxfakNZSG4wQ0szOVlQR2Z3UFA4REZ0a0RFV0o4SUxJbmJTNWdTYVRJRnVCQXBwd0JUaXlsY2ZCTUtwUlFoV3NhZ0dtamJUbnA3OFBRQlU5U2Z6SWtLSElEQUFBfg=="
+    "mallkey":"d3feb59da89e7994c18261a4996437aee5613a1a987ac1409aa4957ec4b90259f1ae39f0bb4879d8eb19857a373aac94e8856ba85be4d1275473051495a1ddc7b6b556d0cc74726cef43df7c5b6992a0",
+    "wxtokenkey":"11b8fb1e8219bfab107a220d4b92e76f308f7536124294fc88389f1c282c55a0",
+    "wxticket":"2503598184",
+    "wxticketkey":"0e09803bdda6a4382be8767f34436bef308f7536124294fc88389f1c282c55a0",
+    "wap_sid":"CLKpvtcFEkBaUU5BV25jMHRaU25wa09CVWNoOVdvbjRjWHp5YjJmWWZMbXBGUjhSelY5ck5hMy0yT002aUlDQ01JNkJZVktJGAQg/BEozILN9AgwpbrJwgU=",
+    "wap_sid2":"CLKpvtcFElxQUlBtaUl5NlM1U1l0TG40UWZfRGNrTGRxaHoxX2NMWUJBR1g2RmN0Ry1ZcGZNck8zSmtjdzQwT3QzM2RtbHdRZXJKbWh2M01SWncxZTQ4b2lTanAybk1EQUFBfg=="
     }
 
 
@@ -88,7 +88,7 @@ while frommsgid>0:
     params = {
         "__biz":"MjM5MjAxNTE4MA==",
         "uin":"MTUyNTY1MDYxMA==",
-        "key":"9ed31d4918c154c8c61b6402efbc67e6aba2fb23f8e661d84ac95894737162482ee1a443a5a7300826be696f02ba4cc857279a78cceac256101dd15913fdefd009deba6aa76833ab245234e45e63b6b8",
+        "key":"d3feb59da89e79949ae5fc44a6ee7f970c55cdb3b0406ab6ed87eede889da19b2fca19c2cac50225a5999d1f106a32aefccd5f286bad8f47330ffbc872c15a17ff06c550ec907c1f6bb6e5e4d74cb965",
         "f":"json",
         "frommsgid":str(frommsgid),
         "count":"10",
@@ -116,7 +116,7 @@ while frommsgid>0:
             id = archive_info["comm_msg_info"]["id"]
             content = get_content(url,headers,cookies,params)
             source_url = re.sub(r"\\","",archive_info["app_msg_ext_info"]["source_url"])
-            save_archive(id, datetime ,title, digest, url, cover, content,source_url)
+            # save_archive(id, datetime ,title, digest, url, cover, content,source_url)
             # cover_name = get_cover_name(datetime,cover)
             # save_img(cover,cover_name)
             # print "标题: " + title
@@ -126,7 +126,8 @@ while frommsgid>0:
             # print "文章id：" + str(id)
             # print "#########################"
             # print source_url
-            time.sleep(random.random() * 5)
+            # time.sleep(random.random() * 5)
+            print content
         except KeyError as e:
             title = "这是糙版"
             digest = None
@@ -136,12 +137,14 @@ while frommsgid>0:
             datetime = timestamp_datetime(archive_info["comm_msg_info"]["datetime"])
             id = archive_info["comm_msg_info"]["id"]
             content = archive_info["comm_msg_info"]["content"]
-            save_archive(id, datetime, title, digest, url, cover, content,source_url)
+            # save_archive(id, datetime, title, digest, url, cover, content,source_url)
             # print title
             # print "发布时间: " + datetime
             # print "文章id：" + str(id)
             # print "#########################"
+            print content
     frommsgid = id
     count_page += 1
     time.sleep(random.random()*10)
     print "******************************************************************"
+    break
