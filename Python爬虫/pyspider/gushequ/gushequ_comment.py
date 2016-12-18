@@ -78,8 +78,37 @@ def formart_comment(response,title,datetime):
         print "评论%s: " % (count) + comment_content
         print "答复：" + reply_content + "\n"
         count += 1
-def save_comment(command_content,):
-    pass
+
+def save_comment(response,title,archive_datetime):
+    rep = eval(response)
+    comments = rep["elected_comment"]
+    print "正在存储%s的评论..." % (title)
+    for comment in comments:
+        nick_name = comment["nick_name"]
+        logo_url = re.sub(r"\\|132", "",comment["logo_url"])
+        comment_content = re.sub(r"\\", "", comment["content"])
+        try:
+            reply_content = re.sub(r"\\", "", comment["reply"]["reply_list"][0]["content"])
+        except IndexError as e:
+            reply_content = "000000"
+        # print title + " " + archive_datetime
+        # print nick_name
+        # print logo_url
+        # print comment_content
+        # print reply_content
+        try:
+
+            conn = MySQLdb.connect(host='139.199.197.243', user='gushequ', passwd='gushequ123', charset='utf8', port=3306)
+            cur = conn.cursor()
+            # cur.select_db('mysql')
+            conn.select_db('gushequ')
+            value = [title, archive_datetime, nick_name, logo_url, comment_content, reply_content]
+            cur.execute("insert into gushequ_comments(title, archive_datetime,nick_name,logo_url,comment_content,reply_content) values(%s,%s,%s,%s,%s,%s);", value)
+            conn.commit()
+            cur.close()
+            conn.close()
+        except MySQLdb.Error, e:
+            print 'Mysql Error Msg:', e
 
 random.seed(datetime.datetime.now())
 count_page = 0
@@ -95,18 +124,18 @@ while frommsgid>0:
 
     cookies = {
     "malluin":"MTUyNTY1MDYxMA==",
-    "mallkey":"d3feb59da89e799405044e6e732ef414a32e02d4e20f40f3afb0af73ae25a137f267211766b3587cb368ee79d0a87573b8399d49540175ab81a4027d3a09bcd5c8e1590aad99133075e6c62a01830c63",
-    "wxtokenkey":"c1c290a16782a1baa6de7c034a64aa653d31375366aa41b64051ef0f32382aa4",
-    "wxticket":"1027865461",
-    "wxticketkey":"362437c15450edfaef7be7b802937c2b3d31375366aa41b64051ef0f32382aa4",
-    "wap_sid":"CLKpvtcFEkA3THVnN3YtZUhNOWV0cEVEQnBBMkw0RFhoMFAxT1hCYnMwM3JlUFkzN05DamRvX0lkSE5EaFdRS19yX2hjeFJsGAQg/BEozILN9Agw8PbJwgU=",
-    "wap_sid2":"wap_sid2=CLKpvtcFElxRVGtZOXBoaUtsZUZzbkZSYzJNZ2N3SnpzcDFXNEl2RnpJYWlhcWFaZmxzV0F0b3c3OHJjN3hFcTJrSEh0RDY3Q0g5ZzFGeEFhLUFmRDdUZnVER0JQbk1EQUFBfg=="
+    "mallkey":"c81d77271180a0e691a8a1e6515ccfc0cf5b00303880d4d2e26ec812997f9d3613adc13e5892d3627edd1552212759682e019a59e9c7750b96a6e44a3202f7ab3058046b71bb23447f996b6aabe4d46d",
+    "wxtokenkey":"57b6095a31654a98884e5e91598febd3976fffa3e5462177cfe6e34b146223fb",
+    "wxticket":"1013746203",
+    "wxticketkey":"9081edbd72bda4426db1546d0d03bc65976fffa3e5462177cfe6e34b146223fb",
+    "wap_sid":"CLKpvtcFEkAyNlFBTXc4WEdoTHhRZllZS1p3bGh5VV9vbzZ5N01iQjJlN0w3LXJfN09zWE9Fd1preTdKZmpMb2NWMWtBOHlIGAQg/BEozILN9AgwxuLKwgU=",
+    "wap_sid2":"CLKpvtcFElw0bHFlR285amVJTWRwY1VkTU9BRXNvS213MVB1TVE1bnFOWWFGSnhFZ2loaFhvcDliQWJ6NUN0WGhTMjhIcDc3aVlZSGJlVUJrdER2X1BlWENpQ0tSWE1EQUFBfg=="
     }
 
     params = {
         "__biz":"MjM5MjAxNTE4MA==",
         "uin":"MTUyNTY1MDYxMA==",
-        "key":"d3feb59da89e799405044e6e732ef414a32e02d4e20f40f3afb0af73ae25a137f267211766b3587cb368ee79d0a87573b8399d49540175ab81a4027d3a09bcd5c8e1590aad99133075e6c62a01830c63",
+        "key":"c81d77271180a0e691a8a1e6515ccfc0cf5b00303880d4d2e26ec812997f9d3613adc13e5892d3627edd1552212759682e019a59e9c7750b96a6e44a3202f7ab3058046b71bb23447f996b6aabe4d46d",
         "f":"json",
         "frommsgid":str(frommsgid),
         "count":"10",
@@ -136,8 +165,8 @@ while frommsgid>0:
             link = content["link"]
             mid = re.search('mid=(\d+).*',link).group(1)
             comment_id = content["comment_id"]
-            comments = get_comments(mid,comment_id,cookies,headers)
-            formart_comment(comments,title,datetime)
+            comments_response = get_comments(mid,comment_id,cookies,headers)
+            save_comment(comments_response,title,datetime)
         except KeyError as e:
             pass
     frommsgid = id
