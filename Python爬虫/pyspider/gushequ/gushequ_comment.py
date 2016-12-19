@@ -75,8 +75,8 @@ def formart_comment(response,title,datetime):
         except IndexError as e:
             reply_content = "000000"
         comment_content = re.sub(r"\\", "", comment["content"])
-        print "评论%s: " % (count) + comment_content
-        print "答复：" + reply_content + "\n"
+        print "评论%s: %s" % (count,comment_content)
+        print "答复：%s "% (reply_content) + "\n"
         count += 1
 
 def save_comment(response,title,archive_datetime):
@@ -112,7 +112,7 @@ def save_comment(response,title,archive_datetime):
 
 random.seed(datetime.datetime.now())
 count_page = 0
-frommsgid = 1000000180
+frommsgid = 1000000188
 
 while frommsgid>0:
     headers =  {
@@ -124,22 +124,22 @@ while frommsgid>0:
 
     cookies = {
     "malluin":"MTUyNTY1MDYxMA==",
-    "mallkey":"c81d77271180a0e691a8a1e6515ccfc0cf5b00303880d4d2e26ec812997f9d3613adc13e5892d3627edd1552212759682e019a59e9c7750b96a6e44a3202f7ab3058046b71bb23447f996b6aabe4d46d",
-    "wxtokenkey":"57b6095a31654a98884e5e91598febd3976fffa3e5462177cfe6e34b146223fb",
-    "wxticket":"1013746203",
+    # "mallkey":"c81d77271180a0e691a8a1e6515ccfc0cf5b00303880d4d2e26ec812997f9d3613adc13e5892d3627edd1552212759682e019a59e9c7750b96a6e44a3202f7ab3058046b71bb23447f996b6aabe4d46d",
+    "wxtokenkey":"d689d4399cd332c031e417999c57ba2f107219583d8f639e40c9c8c716660e37",
+    "wxticket":"489970350",
     "wxticketkey":"9081edbd72bda4426db1546d0d03bc65976fffa3e5462177cfe6e34b146223fb",
-    "wap_sid":"CLKpvtcFEkAyNlFBTXc4WEdoTHhRZllZS1p3bGh5VV9vbzZ5N01iQjJlN0w3LXJfN09zWE9Fd1preTdKZmpMb2NWMWtBOHlIGAQg/BEozILN9AgwxuLKwgU=",
-    "wap_sid2":"CLKpvtcFElw0bHFlR285amVJTWRwY1VkTU9BRXNvS213MVB1TVE1bnFOWWFGSnhFZ2loaFhvcDliQWJ6NUN0WGhTMjhIcDc3aVlZSGJlVUJrdER2X1BlWENpQ0tSWE1EQUFBfg=="
+    "wap_sid":"CLKpvtcFEkBJTmh2Rl8yc2xIOFFQeFJ5U3dfeVFoUk5qMlUwNHM0VG9EYkwyT0lRS3ItaDFONHI3QzZmMWk2RGFVWlZWV2ZGGAQg/REozILN9Agw7ZXgwgU=",
+    "wap_sid2":"CLKpvtcFElxKQUE3d2JBNUJFR2tZeHFiTUpJYWFHTW4zUGlhS1Ztb2xMWERpNVNpMVVJS2xwcUxybG9IWFNCTW5taWlZZTRHaDBKNkFkOVVfZUNRV2o4c1Z6MkJDSE1EQUFBfg=="
     }
 
     params = {
         "__biz":"MjM5MjAxNTE4MA==",
         "uin":"MTUyNTY1MDYxMA==",
-        "key":"c81d77271180a0e691a8a1e6515ccfc0cf5b00303880d4d2e26ec812997f9d3613adc13e5892d3627edd1552212759682e019a59e9c7750b96a6e44a3202f7ab3058046b71bb23447f996b6aabe4d46d",
+        "key":"564c3e9811aee0ab0ce322e326f638782343cc278e440c7b0c339d6f7b364b27eafa47cea80edf0a5c046959c8b1b379046353d0e89eb6c2b241b03a0910ec8f9c81afdf8173e2211c7d94d6f85a76c2",
         "f":"json",
         "frommsgid":str(frommsgid),
         "count":"10",
-        "pass_ticket":"LV10oE60VNJ5r8RXAnGlV43MWSfzlCL136Ei%252Bhm4cov8KWBsWFE0B1WE8KL5ZH7C",
+        "pass_ticket":"Q6ZOBynylOAzPCxsUpf6iRuJGmuAkZiDs79llb3c2vkhsIO85aw%252FhWUC75E2APnJ",
         "wxtoken":"",
         "x5":"0"}
 
@@ -166,7 +166,9 @@ while frommsgid>0:
             mid = re.search('mid=(\d+).*',link).group(1)
             comment_id = content["comment_id"]
             comments_response = get_comments(mid,comment_id,cookies,headers)
-            save_comment(comments_response,title,datetime)
+            # print comments_response
+            # save_comment(comments_response,title,datetime)
+            formart_comment(comments_response, title, datetime)
         except KeyError as e:
             pass
     frommsgid = id
